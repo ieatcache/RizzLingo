@@ -110,6 +110,11 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .rows .pts{font-weight:600;color:var(--soft);white-space:nowrap}
 .rows li.me{background:color-mix(in srgb,var(--cheese) 25%,var(--card))}
 .rows li:nth-child(-n+3) .pos{color:var(--pink)}
+.acct{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.ransom .link{align-self:flex-start;font-size:14px}
+.price{margin:0;font-size:18px}
+.price b{font-family:var(--display);font-weight:400;font-size:30px;color:var(--pink);font-variant-numeric:tabular-nums}
+.price .note{margin-left:8px;font-size:14px}
 @keyframes bob{50%{transform:translateY(-5px)}}
 
 /* lesson */
@@ -464,7 +469,7 @@ function finish(){
 
 const actions = {
   start: id => startLesson(id),
-  home: () => { L = null; view = 'home'; render(); },
+  home: () => { L = null; R = null; view = 'home'; render(); },
   terms: () => { view = 'terms'; render(); },
   retry: id => startLesson(id),
   teachNext: () => { L.ti++; if (L.ti >= L.lesson.teach.length) { L.phase = 'quiz'; prep(); } render(); },
@@ -480,6 +485,16 @@ const actions = {
     render();
   },
   join: () => join(),
+  outAsk: () => { cloud.confirmOut = true; paintBoard(); },
+  outNo: () => { cloud.confirmOut = false; paintBoard(); },
+  outYes: () => signOutNow(),
+  delAsk: () => { R = {stage:'pitch', i:0, price:100, taps:0, msg:''}; view = 'ransom'; render(); },
+  rStart: () => { R.stage = 'haggle'; render(); },
+  rPick: v => { if (+v === HAGGLE[R.i].a) rWin(); else { R.msg = HAGGLE[R.i].no; render(); } },
+  rType: () => { const el = document.getElementById('rphrase'); const ok = el && norm(el.value) === norm(HAGGLE[R.i].phrase); if (ok) rWin(); else { R.msg = HAGGLE[R.i].no; render(); } },
+  rMash: () => { R.taps++; if (R.taps >= HAGGLE[R.i].n) rWin(); else render(); },
+  rPay: () => { R.stage = 'reveal'; render(); },
+  delNow: () => deleteAccount(),
   check: () => check(),
   next: () => next()
 };
@@ -519,8 +534,10 @@ function boardHTML(){
   if (!cloud.on) return '';
   let top;
   if (cloud.down) top = `<p class="note">The leaderboard can't be reached right now. Your progress is still saved on this device.</p>`;
-  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>`;
-  else top = `<p class="note">Pick a username to put your XP on the board. No email or password.</p>
+  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>` + (cloud.confirmOut
+    ? `<p class="hintline">Sign out? A username-only account cannot be signed back into. The name stays on the board and nobody can use it again.</p><div class="acct"><button class="link" data-act="outYes">Yes, sign out</button><button class="link" data-act="outNo">Cancel</button></div>`
+    : `<div class="acct"><button class="link" data-act="outAsk">Sign out</button><button class="link" data-act="delAsk">Delete account</button></div>`);
+  else top = `${cloud.note ? `<p class="unlock">${esc(cloud.note)}</p>` : ''}<p class="note">Pick a username to put your XP on the board. No email or password.</p>
     <div class="join"><input id="uname" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="username" aria-label="Username" value="${esc(cloud.draft || '')}">
     <button class="btn" data-act="join" ${cloud.busy ? 'disabled' : ''}>${cloud.busy ? 'Joining…' : 'Join'}</button></div>
     ${cloud.msg ? `<p class="err" role="alert">${esc(cloud.msg)}</p>` : `<p class="hintline">3 to 16 letters, numbers or underscores.</p>`}`;
@@ -587,11 +604,68 @@ async function join(){
     const {error} = await cloud.sb.from('players').insert({id: cloud.uid, username: name, xp: S.xp});
     if (error) {
       cloud.msg = error.code === '23505' ? 'That username is taken. Try another.' : explain(error);
-    } else { cloud.name = name; cloud.draft = ''; }
+    } else { cloud.name = name; cloud.draft = ''; cloud.note = ''; }
   } catch (e) { cloud.msg = explain(e); }
   cloud.busy = false;
   paintBoard();
   if (cloud.name) loadBoard();
+}
+
+/* ---- Sign out, delete account, and Dave's (fake) exit fee ---- */
+const HAGGLE = [
+  {to: 75, t:'mc', say:'Start by saying something nice about Dave.', opts:['Those sunglasses are doing a lot of work.','You have the confidence of a much taller camel.','You smell like a zoo.'], a:1, no:'Dave is hurt. The price stays.'},
+  {to: 40, t:'type', say:'Type this, exactly, and mean it:', phrase:'Dave is the smoothest camel alive', no:'Not word for word. Dave noticed.'},
+  {to: 15, t:'mc', say:'Finish a line for Dave: "Are you a camel? Because…"', opts:['you spit when you talk.','I would cross a desert for you.','you have a weird neck.'], a:1, no:'Dave has never been so insulted. The price stays.'},
+  {to: 5, t:'mash', say:'Beg. Ten times. Dave is counting.', n:10},
+  {to: 0.5, t:'mc', say:'Final round. Why should Dave let you go for pocket change?', opts:['I know my rights.','I will leave a one-star review.','My mom says hi.'], a:2, no:'Dave is unmoved. Try again.'}
+];
+let R = null;
+const money = n => '$' + n.toFixed(2);
+function viewRansom(){
+  const head = `<div class="bar"><button class="x" data-act="home" aria-label="Back, keep my account">×</button><span class="kicker">Account department</span></div>`;
+  const skip = `<button class="link" data-act="delNow">Skip the bit and delete my account now</button>`;
+  if (R.stage === 'pitch') return head + `<main class="end ransom">${CHEESE}
+    <h2>Leaving so soon?</h2>
+    <p class="note">It would be a real shame if the username <b>${esc(cloud.name)}</b> found its way to every extended-warranty call center, timeshare seminar and "you have won a cruise" hotline Dave can think of.</p>
+    <p class="price">Account release fee: <b>${money(100)}</b></p>
+    <div class="row"><button class="btn" data-act="rStart">Negotiate</button><button class="btn ghost" data-act="home">Fine, I'll stay</button></div>
+    ${skip}</main>`;
+  if (R.stage === 'reveal') return head + `<main class="end ransom">${CHEESE}
+    <h2>Dave was bluffing.</h2>
+    <p class="note">RizzLingo does not take money, and the only thing we store is your username and XP, which we do not send anywhere. Deleting your account is free. It removes your username and score from the leaderboard for good.</p>
+    ${R.err ? `<p class="err" role="alert">${esc(R.err)}</p>` : ''}
+    <div class="row"><button class="btn" data-act="delNow" ${R.busy ? 'disabled' : ''}>${R.busy ? 'Deleting…' : 'Delete my account'}</button><button class="btn ghost" data-act="home">Keep my account</button></div></main>`;
+  if (R.stage === 'final') return head + `<main class="end ransom">${CHEESE}
+    <h2>Fifty cents. Final offer.</h2>
+    <p class="note">You haggled a camel down from ${money(100)}. Dave respects that, and resents it.</p>
+    <p class="price">Account release fee: <b>${money(0.5)}</b></p>
+    <div class="row"><button class="btn" data-act="rPay">Pay ${money(0.5)}</button></div>${skip}</main>`;
+  const h = HAGGLE[R.i]; let body;
+  if (h.t === 'mc') body = `<div class="opts">${h.opts.map((o, i) => `<button class="opt" data-act="rPick" data-v="${i}"><span>${esc(o)}</span></button>`).join('')}</div>`;
+  else if (h.t === 'type') body = `<blockquote class="say">${esc(h.phrase)}</blockquote><div class="join"><input id="rphrase" autocomplete="off" spellcheck="false" aria-label="Type the phrase"><button class="btn" data-act="rType">Submit</button></div>`;
+  else body = `<div class="row"><button class="btn" data-act="rMash">Please, Dave (${R.taps} of ${h.n})</button></div>`;
+  return head + `<main class="stage ransom">
+    <p class="price">Current fee: <b>${money(R.price)}</b> <span class="note">Round ${R.i + 1} of ${HAGGLE.length}</span></p>
+    <h2>${esc(h.say)}</h2>${body}
+    ${R.msg ? `<p class="err" role="alert">${esc(R.msg)}</p>` : ''}
+    ${skip}</main>`;
+}
+function rWin(){ R.price = HAGGLE[R.i].to; R.i++; R.taps = 0; R.msg = ''; if (R.i >= HAGGLE.length) R.stage = 'final'; render(); }
+async function deleteAccount(){
+  if (!cloud.sb || !cloud.uid) { view = 'home'; return render(); }
+  R = R || {}; R.stage = 'reveal'; R.busy = true; R.err = ''; render();
+  try {
+    const {data, error} = await cloud.sb.from('players').delete().eq('id', cloud.uid).select();
+    if (error) throw error;
+    if (!data || !data.length) throw new Error('nothing was deleted');
+    try { await cloud.sb.auth.signOut(); } catch (e) {}
+    cloud.uid = null; cloud.name = ''; cloud.msg = ''; cloud.note = 'Your account was deleted.'; R = null; view = 'home'; render(); loadBoard();
+  } catch (e) { R.busy = false; R.err = 'Could not delete the account right now. Nothing was charged, obviously. Try again in a minute.'; render(); }
+}
+async function signOutNow(){
+  if (!cloud.sb) return;
+  try { await cloud.sb.auth.signOut(); } catch (e) {}
+  cloud.uid = null; cloud.name = ''; cloud.confirmOut = false; cloud.note = 'You are signed out.'; paintBoard();
 }
 
 function viewHome(){
@@ -726,7 +800,7 @@ function viewTerms(){
       <li><b>No refunds.</b>The site is free. You will still not be getting your money back.</li>
       <li><b>Results are not guaranteed.</b>If a line bombs, that is between you, her and the camel.</li>
     </ol>
-    <p class="fine">The actual fine print: this page is a joke. RizzLingo claims no real rights to anything of yours. Your progress is saved in your own browser. If you join the leaderboard, we store the username you pick and your XP so they can appear on the board, and nothing else: no email, no password.</p>
+    <p class="fine">The actual fine print: this page is a joke. RizzLingo claims no real rights to anything of yours. Your progress is saved in your own browser. If you join the leaderboard, we store the username you pick and your XP so they can appear on the board, and nothing else: no email, no password. You can delete your account from the Leaderboard section at any time, for free, whatever Dave tells you.</p>
     <div><button class="btn" data-act="home">Back to the path</button></div>
   </main>`;
 }
@@ -741,7 +815,7 @@ function viewFail(){
 }
 
 function render(){
-  app.innerHTML = view === 'home' ? viewHome() : view === 'lesson' ? viewLesson() : view === 'done' ? viewDone() : view === 'terms' ? viewTerms() : viewFail();
+  app.innerHTML = view === 'home' ? viewHome() : view === 'lesson' ? viewLesson() : view === 'done' ? viewDone() : view === 'terms' ? viewTerms() : view === 'ransom' ? viewRansom() : viewFail();
   if (view === 'lesson' && L.phase === 'quiz') {
     const b = document.getElementById('blank');
     if (b && !L.fb) b.focus();
