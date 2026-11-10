@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheddar Pickup Line Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one narrow phone-width column. Home is a zigzag lesson path; a lesson is a card stage with a sticky answer bar. */
+:root{
+  --bg:#F1EDFB; --card:#FFFFFF; --ink:#24163A; --soft:#6B5C86; --line:#D9D0EE;
+  --cheese:#FFB81C; --cheese-deep:#D98300; --pink:#F0326F;
+  --good:#0E9A68; --good-bg:#D8F5E8; --bad:#D92B45; --bad-bg:#FDE0E4;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#170E24; --card:#241737; --ink:#F5EFFF; --soft:#B3A6CC; --line:#3C2C58;
+    --cheese:#FFC23D; --cheese-deep:#B86E00; --pink:#FF5C8F;
+    --good:#3DD69B; --good-bg:#11382B; --bad:#FF6B81; --bad-bg:#431821;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#170E24; --card:#241737; --ink:#F5EFFF; --soft:#B3A6CC; --line:#3C2C58;
+  --cheese:#FFC23D; --cheese-deep:#B86E00; --pink:#FF5C8F;
+  --good:#3DD69B; --good-bg:#11382B; --bad:#FF6B81; --bad-bg:#431821;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:default}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.1}
+#app{max-width:560px;margin:0 auto;min-height:100%;padding:0 18px;display:flex;flex-direction:column}
+
+/* shared pieces */
+.btn{border:2px solid var(--ink);background:var(--cheese);color:#24163A;font-weight:800;font-size:17px;padding:13px 22px;border-radius:16px;box-shadow:0 4px 0 var(--ink);transition:transform .06s, box-shadow .06s}
+.btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.btn:disabled{background:var(--line);color:var(--soft);border-color:var(--line);box-shadow:none}
+.btn.ghost{background:var(--card);color:var(--ink)}
+.btn.wide{width:100%}
+.stat{display:flex;align-items:baseline;gap:6px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat small{font-weight:600;color:var(--soft);font-size:13px}
+.hearts{color:var(--pink);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* home */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:44px;height:auto}
+.brand h1{font-size:30px;letter-spacing:.5px}
+.stats{display:flex;gap:18px}
+.hero{background:var(--ink);color:var(--bg);border-radius:24px;padding:20px 22px;margin:8px 0 6px;display:flex;flex-direction:column;gap:8px}
+.hero .eyebrow{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cheese)}
+.hero p{margin:0;font-family:var(--display);font-size:26px;line-height:1.15;text-wrap:balance}
+.hero small{opacity:.75}
+.path{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:18px}
+.node{display:flex;align-items:center;gap:16px;margin-left:calc(var(--off) * 1px)}
+.node button{flex:none;width:76px;height:76px;border-radius:24px;border:2px solid var(--ink);background:var(--cheese);box-shadow:0 6px 0 var(--ink);font-family:var(--display);font-size:30px;color:#24163A;transition:transform .06s, box-shadow .06s}
+.node button:active:not(:disabled){transform:translateY(6px);box-shadow:0 0 0 var(--ink)}
+.node.done button{background:var(--good);color:#fff}
+.node.locked button{background:var(--line);border-color:var(--line);box-shadow:0 6px 0 var(--line);color:var(--soft)}
+.node.next button{animation:bob 1.6s ease-in-out infinite}
+.node h3{font-size:20px}
+.node p{margin:2px 0 0;color:var(--soft);font-size:15px}
+.node .tag{display:inline-block;margin-top:4px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--soft)}
+.node.done .tag{background:var(--good-bg);color:var(--good)}
+.node.next .tag{background:var(--pink);color:#fff}
+.practice{margin:28px 0 40px;border:2px dashed var(--line);border-radius:22px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.practice p{margin:0;color:var(--soft);font-size:15px}
+.practice h3{font-size:20px}
+@keyframes bob{50%{transform:translateY(-5px)}}
+
+/* lesson */
+.bar{display:flex;align-items:center;gap:14px;padding:18px 0 8px}
+.x{border:0;background:none;font-size:26px;line-height:1;color:var(--soft);padding:4px 8px;border-radius:10px}
+.track{flex:1;height:16px;border-radius:99px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;background:var(--cheese);border-radius:99px;transition:width .35s}
+.stage{flex:1;padding:18px 0 24px;display:flex;flex-direction:column;gap:18px}
+.stage h2{font-size:26px}
+.kicker{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--pink)}
+.say{margin:0;background:var(--card);border:2px solid var(--ink);border-radius:22px 22px 22px 6px;padding:18px 20px;font-size:21px;font-weight:600;line-height:1.35}
+.note{margin:0;color:var(--soft)}
+.teach{display:flex;gap:14px;align-items:flex-start}
+.teach svg{flex:none;width:64px;height:auto;margin-top:6px}
+.dots{display:flex;gap:6px}
+.dots i{width:22px;height:6px;border-radius:9px;background:var(--line)}
+.dots i.on{background:var(--pink)}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px 14px;box-shadow:0 3px 0 var(--line);font-weight:600}
+.opt kbd{flex:none;font:800 13px var(--body);width:26px;height:26px;display:grid;place-items:center;border:2px solid var(--line);border-radius:8px;color:var(--soft)}
+.opt.sel{border-color:var(--ink);box-shadow:0 3px 0 var(--ink);background:color-mix(in srgb,var(--cheese) 22%,var(--card))}
+.opt.right{border-color:var(--good);box-shadow:0 3px 0 var(--good);background:var(--good-bg)}
+.opt.wrong{border-color:var(--bad);box-shadow:0 3px 0 var(--bad);background:var(--bad-bg)}
+.tray{min-height:62px;border-bottom:2px solid var(--line);padding:6px 0 10px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tok{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 12px;box-shadow:0 3px 0 var(--line);font-weight:600}
+.tok.used{visibility:hidden}
+.blank{font:inherit;font-weight:800;color:var(--ink);background:var(--bg);border:0;border-bottom:3px solid var(--ink);border-radius:6px 6px 0 0;width:8.5em;max-width:100%;padding:2px 8px;text-align:center}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match .col{display:flex;flex-direction:column;gap:10px}
+.match .opt{min-height:64px;font-size:15.5px}
+.match .opt.gone{opacity:.45;border-color:var(--good);box-shadow:none;background:var(--good-bg)}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.foot{position:sticky;bottom:0;margin:0 -18px;padding:14px 18px 18px;background:var(--bg);border-top:2px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.foot.good{background:var(--good-bg);border-color:var(--good)}
+.foot.bad{background:var(--bad-bg);border-color:var(--bad)}
+.foot h3{font-size:22px}
+.foot.good h3{color:var(--good)} .foot.bad h3{color:var(--bad)}
+.foot p{margin:0}
+.foot .hint{color:var(--soft);text-align:center;font-size:15px}
+
+/* end screens */
+.end{flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:30px 0}
+.end svg{width:120px;height:auto}
+.end h2{font-size:40px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px}
+.tile b{display:block;font-family:var(--display);font-weight:400;font-size:28px;font-variant-numeric:tabular-nums}
+.tile span{font-size:13px;color:var(--soft);font-weight:600}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row .btn{flex:1}
+@media (max-width:420px){.node{margin-left:calc(var(--off) * .45px)}.hero p{font-size:22px}.stage h2{font-size:23px}.say{font-size:19px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const CHEESE = `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M8 70 L102 22 Q114 18 114 32 L114 78 Q114 88 104 88 L18 88 Q8 88 8 78Z" fill="var(--cheese)" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><circle cx="98" cy="40" r="6" fill="var(--cheese-deep)"/><circle cx="26" cy="77" r="4.5" fill="var(--cheese-deep)"/><circle cx="101" cy="75" r="5" fill="var(--cheese-deep)"/><circle cx="50" cy="66" r="4" fill="var(--pink)" opacity=".55"/><circle cx="84" cy="66" r="4" fill="var(--pink)" opacity=".55"/><circle cx="57" cy="58" r="4" fill="#24163A"/><circle cx="77" cy="58" r="4" fill="#24163A"/><path d="M59 68 Q67 77 75 68" fill="none" stroke="#24163A" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+
+const mc = (p, line, a, wrong, why) => ({t:'mc', p, line, a, wrong, why});
+const bank = (p, line, a, extra, why) => ({t:'bank', p, line, a:a.split(' '), extra, why});
+const fill = (before, after, a, why) => ({t:'fill', before, after, a, why});
+const match = (pairs) => ({t:'match', pairs});
+const FINISH = 'Finish the line';
+
+const LESSONS = [
+{ id:'classics', n:'1', title:'The Classics', sub:'Magicians, maps and parking tickets',
+  teach:[
+    {line:'Are you a magician? Because whenever I look at you, everyone else disappears.', note:'The formula: a silly question, then "because", then the punchline. Pause for one beat before the punchline.'},
+    {line:'Do you have a map? I keep getting lost in your eyes.', note:'Delivery rule number one: grin like you know it is ridiculous. The joke is on you, never on her.'},
+    {line:"Are you a parking ticket? Because you've got FINE written all over you.", note:'A groan counts as a win. You are going for a laugh, not a swoon.'}
+  ],
+  q:[
+    mc(FINISH, 'Are you a magician? Because whenever I look at you…', 'everyone else disappears.', ['I want my money back.','I see a rabbit.','my wallet vanishes.']),
+    bank('Build the punchline', 'Do you have a map?', 'I keep getting lost in your eyes', ['shoes','GPS','car']),
+    fill("Are you a parking ticket? Because you've got", 'written all over you.', ['fine']),
+    mc(FINISH, 'Do you believe in love at first sight…', 'or should I walk by again?', ['or is that just the nachos?','or do you need glasses?','because I do not.']),
+    match([['Do you have a map?',"I'm lost in your eyes."],['Got a Band-Aid?','I scraped my knee falling for you.'],['Is it hot in here?','Or is it just you?'],['Are you a magician?','Everyone else disappears.']]),
+    mc('What makes a cheesy line land?', '', 'Grinning like you know it is ridiculous', ['Dead-serious, unblinking eye contact','Saying it again, but louder','Winking seven times'], 'Cheese only works when you are in on the joke.'),
+    mc(FINISH, "Is your name Google? Because you have everything…", "I've been searching for.", ['in your browser history.','except my number.','sponsored at the top.'])
+  ]},
+{ id:'food', n:'2', title:'Fresh From the Kitchen', sub:'Food puns, served warm',
+  teach:[
+    {line:'Are you a banana? Because I find you a-peeling.', note:'Food puns are the safest cheese there is. Everybody eats.'},
+    {line:'I love you a latte.', note:'Short puns work best as a reply. She says she needs coffee, you say this, everyone groans.'},
+    {line:"You must be a cheese, because you're looking Gouda.", note:'The house special. Say "Gouda" slowly so it lands.'}
+  ],
+  q:[
+    mc(FINISH, "Are we at a bakery? Because you're a…", 'cutie pie.', ['day-old bagel.','gluten allergy.','very long line.']),
+    fill('Are you a banana? Because I find you a-', '.', ['peeling','appealing']),
+    mc('Pick the missing food', "You've stolen a ____ my heart.", 'pizza', ['taco','salad','soup'], '"A pizza my heart." You are welcome.'),
+    match([['We make a great','pear.'],["You're one in a",'melon.'],["You're my butter",'half.'],['Olive','you.']]),
+    bank('Build the house special', 'You must be a cheese…', "because you're looking Gouda", ['Swiss','moldy','feta']),
+    mc(FINISH, "Are you a campfire? Because you're hot and I want…", "s'more.", ['a fire extinguisher.','to leave.','marshmallows only.']),
+    mc(FINISH, "If you were a vegetable, you'd be a…", 'cute-cumber.', ['brussels sprout.','turnip.','sad little radish.'])
+  ]},
+{ id:'nerd', n:'3', title:'Nerd Alert', sub:'Chemistry, maths and Wi-Fi',
+  teach:[
+    {line:"Are you made of copper and tellurium? Because you're Cu-Te.", note:'Periodic table humor. Works best on people who own a lab coat or a library card.'},
+    {line:"You must be the square root of −1, because you can't be real.", note:'If she corrects your maths, that is a conversation. Mission accomplished.'},
+    {line:"Are you Wi-Fi? Because I'm feeling a connection.", note:'A modern classic. Strong signal, low risk.'}
+  ],
+  q:[
+    mc(FINISH, "Are you made of copper and tellurium? Because you're…", 'Cu-Te.', ['Co-Ld.','Fe-Ar.','Ba-Na-Na.']),
+    fill('Are you a carbon sample? Because I want to', 'you.', ['date']),
+    mc(FINISH, 'You must be the square root of −1, because…', "you can't be real.", ['you are negative.','I cannot solve you.','you are below average.']),
+    match([['Are you a keyboard?',"You're just my type."],['Are you Wi-Fi?',"I'm feeling a connection."],['Are you a 90° angle?',"You're looking right."],['Are you a triangle?',"You're acute one."]]),
+    bank('Build the punchline', 'Is your name Google?', "Because you have everything I've been searching for", ['Bing','lost','404']),
+    mc(FINISH, 'Are you a time traveler? Because…', 'I can see you in my future.', ['you look very old.','you are late.','I regret the past.']),
+    mc(FINISH, 'My love for you is like pi:', 'irrational and never-ending.', ['roughly three.','best served with ice cream.','hard to memorize.'])
+  ]},
+{ id:'after', n:'4', title:'After the Line', sub:'What to say once she laughs',
+  teach:[
+    {line:'The line is the doorbell, not the house.', note:'A cheesy line buys you one laugh. What you say next is the real conversation, so ask something she cannot answer with yes or no.'},
+    {line:'"What brought you out tonight?"', note:'Open questions start stories. "Do you come here often?" ends in one word.'},
+    {line:'"That jacket is fantastic. Where did you find it?"', note:'Compliment a choice, not a body part. Choices show you noticed her taste.'}
+  ],
+  q:[
+    mc('She laughs at your line. What next?', '', 'Ask an open question, like what brought her out tonight', ['Fire off three more pickup lines in a row','Explain why the pun was funny','Stand there until she says something'], 'One line, then a real question.'),
+    mc('Which one is an open question?', '', "What's the best thing you ate this week?", ['Do you like food?','Nice weather, right?','You come here often?'], 'She can answer the others in one word.'),
+    mc('Pick the best compliment', '', 'That jacket is fantastic. Where did you find it?', ["You'd be prettier if you smiled.","You're not like other girls.",'Nice legs.'], 'Compliment a choice she made.'),
+    mc('She says she just got back from Portugal.', '', 'What was the highlight of the trip?', ['I went to Spain once. Let me tell you all about it.','Cool. Anyway, are you a magician?','Portugal is overrated.'], 'Follow her thread before starting your own.'),
+    bank('Sometimes the best line is the plainest. Build it.', '', "Hi, I'm Sam. What's your name?", ['Because','magician'], 'It has a very high success rate.'),
+    fill('The line is the doorbell, not the', '.', ['house']),
+    mc('How much of the talking should you do?', '', 'About half. Ask, listen, then add something of your own', ['All of it, so there is no awkward silence','None. Just nod','Enough to list your achievements'], 'A conversation is a game of catch.')
+  ]},
+{ id:'room', n:'5', title:'Reading the Room', sub:'Green lights, red lights, graceful exits',
+  teach:[
+    {line:'Short answers and a turned shoulder mean wrap it up.', note:'Interest looks like questions back, eye contact and turning toward you. Without those, say something nice and go.'},
+    {line:'Headphones in, laptop open, mid-conversation: not the moment.', note:'Timing is half the game. Pick a moment when she is free to talk.'},
+    {line:'"No worries. Have a great night!"', note:'A no gets a smile and an exit. No arguing, no second attempt. Leaving well is the most charming thing you can do.'}
+  ],
+  q:[
+    mc('She gives one-word answers and keeps checking her phone.', '', 'Say "Nice meeting you" and move on', ['Try a cheesier line','Ask why she is being rude','Move closer'], 'Short answers are an answer.'),
+    mc('She says: "I have a boyfriend."', '', '"Lucky guy. Have a good one!"', ['"I don\'t see him here."','"I\'m not the jealous type."','"So? We can be friends… for now."'], 'Take it at face value and leave her smiling.'),
+    mc('Which one is a green light?', '', 'She asks you a question back and turns to face you', ['She laughs politely and looks around for her friends','She says "haha" and puts her headphones back in','She answers without looking up']),
+    mc('Which is a good moment to say hi?', '', 'She is waiting at the bar, looking around the room', ['She is on a phone call','She is sprinting for a bus','She is mid-set at the gym with headphones on']),
+    fill('A no gets a smile and an', '.', ['exit']),
+    bank('Build the graceful exit', 'She says she is not interested.', 'No worries. Have a great night!', ['Why','not?','But']),
+    mc('Your line bombs. Total silence.', '', 'Laugh at yourself: "Okay, that sounded better in my head."', ['Repeat it, slower','Blame her sense of humor','Pretend you were talking to someone else'], 'Owning a flop is funnier than the line was.')
+  ]},
+{ id:'ask', n:'6', title:'The Ask', sub:'Numbers, plans and a final exam',
+  teach:[
+    {line:'"I\'m trying the taco place on 5th on Thursday. Want to come?"', note:'A good ask names a place and a day, and is easy to say no to. "We should hang out sometime" names nothing.'},
+    {line:'"I\'d like to keep talking. Can I get your number?"', note:'Plain and direct beats clever here. Save the cheese for the first text.'},
+    {line:'Are you French? Because Eiffel for you.', note:'Like that one. Now go pass the final exam.'}
+  ],
+  q:[
+    mc('Pick the best way to ask her out', '', "I'm trying the taco place on 5th on Thursday. Want to come?", ['We should hang out sometime, maybe, whenever.','Give me your number.','So are we dating now?'], 'A place, a day and an easy out.'),
+    mc(FINISH, 'Are you French? Because…', 'Eiffel for you.', ['I surrender.','baguette about it.','croissant my heart and hope to die.']),
+    fill("Are you a loan? Because you've got my", '.', ['interest']),
+    mc('She says: "Maybe another time."', '', '"Sounds good. Here\'s my number if Thursday frees up."', ['"Come on, just one drink."','Ask again every ten minutes','"Your loss."'], 'Leave the door open and the pressure off.'),
+    match([['Are you a parking ticket?','FINE written all over you.'],['Are you a banana?','I find you a-peeling.'],['Are you Wi-Fi?',"I'm feeling a connection."],['Are you a campfire?',"I want s'more."]]),
+    bank('Build the plain, direct ask', '', "I'd like to keep talking. Can I get your number?", ['magician','because']),
+    mc('The whole course in one sentence?', '', 'Cheese opens the door, kindness keeps it open', ['More lines, more volume','Never take no for an answer','Puns are a personality'], 'Graduated with honors in Gouda.')
+  ]}
+];
+const DAILY = [
+  "Are you a parking ticket? Because you've got FINE written all over you.",
+  "You must be a cheese, because you're looking Gouda.",
+  "Are you Wi-Fi? Because I'm feeling a connection.",
+  "Do you believe in love at first sight, or should I walk by again?",
+  "Are you French? Because Eiffel for you.",
+  "If you were a vegetable, you'd be a cute-cumber.",
+  "Are you a campfire? Because you're hot and I want s'more."
+];
+const RANKS = [[0,'Mild'],[30,'Medium'],[60,'Sharp'],[90,'Extra Sharp'],[150,'Vintage Reserve']];
+
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+const dayKey = (d) => { d = d || new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+
+const KEY = 'cheddar-v1';
+let S = {xp:0, streak:0, last:'', done:{}};
+let view = 'home';
+let L = null;      // active lesson session
+let result = null; // last finished lesson summary
+
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function rank(){ let r = RANKS[0][1]; for (const [x, name] of RANKS) if (S.xp >= x) r = name; return r; }
+function liveStreak(){
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  return (S.last === dayKey() || S.last === dayKey(y)) ? S.streak : 0;
+}
+const cur = () => L.queue[L.idx];
+
+function prep(){
+  const q = cur();
+  if (q.t === 'mc') L.ui = {opts: shuffle([q.a, ...q.wrong]), sel: null};
+  else if (q.t === 'bank') L.ui = {toks: shuffle([...q.a, ...q.extra]), picked: []};
+  else if (q.t === 'fill') L.ui = {val: ''};
+  else L.ui = {left: shuffle(q.pairs.map((_, i) => i)), right: shuffle(q.pairs.map((_, i) => i)), selL: null, done: [], wrong: null};
+  L.fb = null;
+}
+function startLesson(id){
+  let lesson;
+  if (id === 'practice') {
+    const pool = LESSONS.filter((l, i) => S.done[l.id] || i === 0).flatMap(l => l.q);
+    lesson = {id:'practice', title:'Practice', teach:[], q: shuffle(pool).slice(0, 8)};
+  } else lesson = LESSONS.find(l => l.id === id);
+  L = {lesson, queue: lesson.q.slice(), idx: 0, total: lesson.q.length, right: 0, miss: 0, hearts: 5, phase: lesson.teach.length ? 'teach' : 'quiz', ti: 0, ui: null, fb: null};
+  if (L.phase === 'quiz') prep();
+  view = 'lesson'; render();
+}
+function ready(){
+  const u = L.ui, q = cur();
+  if (q.t === 'mc') return u.sel !== null;
+  if (q.t === 'bank') return u.picked.length > 0;
+  if (q.t === 'fill') return u.val.trim() !== '';
+  return false;
+}
+function check(){
+  if (L.fb || !ready()) return;
+  const q = cur(), u = L.ui; let ok = false;
+  if (q.t === 'mc') ok = u.opts[u.sel] === q.a;
+  else if (q.t === 'bank') ok = u.picked.map(i => u.toks[i]).join(' ') === q.a.join(' ');
+  else if (q.t === 'fill') ok = q.a.some(x => norm(x) === norm(u.val));
+  settle(ok);
+}
+function settle(ok){
+  const q = cur();
+  L.fb = {ok};
+  if (ok) L.right++;
+  else { L.miss++; L.hearts--; if (L.hearts > 0) L.queue.push(q); }
+  render();
+}
+function next(){
+  if (L.hearts <= 0) { view = 'fail'; render(); return; }
+  L.idx++;
+  if (L.idx >= L.queue.length) return finish();
+  prep(); render();
+}
+function finish(){
+  const perfect = L.miss === 0;
+  const xp = 10 + (perfect ? 5 : 0);
+  const today = dayKey(), y = new Date(); y.setDate(y.getDate() - 1);
+  if (S.last !== today) { S.streak = (S.last === dayKey(y)) ? S.streak + 1 : 1; S.last = today; }
+  S.xp += xp;
+  if (L.lesson.id !== 'practice') S.done[L.lesson.id] = true;
+  save();
+  const acc = Math.round(100 * L.total / (L.total + L.miss));
+  result = {xp, acc, perfect, title: L.lesson.title, grade: acc === 100 ? 'Extra Mature' : acc >= 80 ? 'Sharp Cheddar' : 'Mild Cheddar'};
+  L = null; view = 'done'; render();
+}
+
+const actions = {
+  start: id => startLesson(id),
+  home: () => { L = null; view = 'home'; render(); },
+  retry: id => startLesson(id),
+  teachNext: () => { L.ti++; if (L.ti >= L.lesson.teach.length) { L.phase = 'quiz'; prep(); } render(); },
+  pick: v => { if (L.fb) return; L.ui.sel = +v; render(); },
+  tok: v => { if (L.fb) return; const u = L.ui, i = +v; if (!u.picked.includes(i)) u.picked.push(i); render(); },
+  untok: v => { if (L.fb) return; const u = L.ui; u.picked = u.picked.filter(i => i !== +v); render(); },
+  mL: v => { if (L.fb) return; const u = L.ui; u.wrong = null; u.selL = +v; render(); },
+  mR: v => {
+    if (L.fb) return; const u = L.ui, j = +v;
+    if (u.selL === null) return;
+    if (u.selL === j) { u.done.push(j); u.selL = null; u.wrong = null; if (u.done.length === cur().pairs.length) return settle(true); }
+    else { u.wrong = {l: u.selL, r: j}; u.selL = null; }
+    render();
+  },
+  check: () => check(),
+  next: () => next()
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  const fn = actions[b.dataset.act];
+  if (fn) fn(b.dataset.v);
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'blank' && L && !L.fb) {
+    L.ui.val = e.target.value;
+    const c = document.getElementById('checkBtn'); if (c) c.disabled = !ready();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (view !== 'lesson' || !L) return;
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (L.phase === 'teach') actions.teachNext();
+    else if (L.fb) next();
+    else check();
+  } else if (L.phase === 'quiz' && !L.fb && cur().t === 'mc' && e.key >= '1' && e.key <= '4') {
+    actions.pick(+e.key - 1);
+  }
+});
+
+function viewHome(){
+  const doneCount = LESSONS.filter(l => S.done[l.id]).length;
+  const nextIdx = LESSONS.findIndex(l => !S.done[l.id]);
+  const offs = [0, 46, 92, 46, 0, 46];
+  const daily = DAILY[Math.floor(Date.now() / 864e5) % DAILY.length];
+  const nodes = LESSONS.map((l, i) => {
+    const done = !!S.done[l.id], isNext = i === nextIdx, locked = !done && !isNext;
+    const cls = done ? 'done' : isNext ? 'next' : 'locked';
+    const tag = done ? 'Done · tap to redo' : isNext ? 'Start here' : 'Locked';
+    return `<li class="node ${cls}" style="--off:${offs[i % offs.length]}">
+      <button data-act="start" data-v="${l.id}" ${locked ? 'disabled' : ''} aria-label="${esc(l.title)}, ${tag}">${done ? '✓' : l.n}</button>
+      <div><h3>${esc(l.title)}</h3><p>${esc(l.sub)}</p><span class="tag">${tag}</span></div></li>`;
+  }).join('');
+  return `<header class="top">
+      <div class="brand">${CHEESE}<h1>Cheddar</h1></div>
+      <div class="stats">
+        <div class="stat">${liveStreak()} <small>day streak</small></div>
+        <div class="stat">${S.xp} <small>XP</small></div>
+      </div>
+    </header>
+    <section class="hero">
+      <span class="eyebrow">Line of the day</span>
+      <p>${esc(daily)}</p>
+      <small>Cheese level: ${rank()} · ${doneCount} of ${LESSONS.length} lessons done</small>
+    </section>
+    <ol class="path">${nodes}</ol>
+    <section class="practice">
+      <div><h3>Practice round</h3><p>Eight random questions from the lessons you have finished.</p></div>
+      <button class="btn ghost" data-act="start" data-v="practice">Practice</button>
+    </section>`;
+}
+
+function viewLesson(){
+  const pct = L.phase === 'teach' ? 0 : Math.round(100 * L.right / L.total);
+  const head = `<div class="bar"><button class="x" data-act="home" aria-label="Quit lesson">×</button>
+    <div class="track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <span class="hearts" aria-label="${L.hearts} hearts left">♥ ${L.hearts}</span></div>`;
+  if (L.phase === 'teach') {
+    const t = L.lesson.teach[L.ti];
+    const dots = L.lesson.teach.map((_, i) => `<i class="${i <= L.ti ? 'on' : ''}"></i>`).join('');
+    return head + `<main class="stage">
+        <span class="kicker">New line · ${esc(L.lesson.title)}</span>
+        <div class="dots">${dots}</div>
+        <blockquote class="say">${esc(t.line)}</blockquote>
+        <div class="teach">${CHEESE}<p class="note">${esc(t.note)}</p></div>
+      </main>
+      <footer class="foot"><button class="btn wide" data-act="teachNext">${L.ti === L.lesson.teach.length - 1 ? 'Start the quiz' : 'Got it'}</button></footer>`;
+  }
+  const q = cur(), u = L.ui, fb = L.fb; let body = '';
+  if (q.t === 'mc') {
+    body = `<h2>${esc(q.p)}</h2>${q.line ? `<blockquote class="say">${esc(q.line)}</blockquote>` : ''}<div class="opts">` +
+      u.opts.map((o, i) => {
+        let c = u.sel === i ? 'sel' : '';
+        if (fb) c = o === q.a ? 'right' : (u.sel === i ? 'wrong' : '');
+        return `<button class="opt ${c}" data-act="pick" data-v="${i}" ${fb ? 'disabled' : ''}><kbd>${i + 1}</kbd><span>${esc(o)}</span></button>`;
+      }).join('') + `</div>`;
+  } else if (q.t === 'bank') {
+    body = `<h2>${esc(q.p)}</h2>${q.line ? `<blockquote class="say">${esc(q.line)}</blockquote>` : ''}
+      <div class="tray" aria-label="Your answer">${u.picked.map(i => `<button class="tok" data-act="untok" data-v="${i}" ${fb ? 'disabled' : ''}>${esc(u.toks[i])}</button>`).join('')}</div>
+      <div class="bank">${u.toks.map((w, i) => `<button class="tok ${u.picked.includes(i) ? 'used' : ''}" data-act="tok" data-v="${i}" ${fb || u.picked.includes(i) ? 'disabled' : ''}>${esc(w)}</button>`).join('')}</div>`;
+  } else if (q.t === 'fill') {
+    body = `<h2>Type the missing word</h2>
+      <blockquote class="say">${esc(q.before)} <input class="blank" id="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Missing word" value="${esc(u.val)}" ${fb ? 'disabled' : ''}>${q.after === '.' ? '.' : ' ' + esc(q.after)}</blockquote>`;
+  } else {
+    const col = (ids, side) => ids.map(i => {
+      const gone = u.done.includes(i);
+      let c = gone ? 'gone' : (side === 0 && u.selL === i ? 'sel' : '');
+      if (u.wrong && ((side === 0 && u.wrong.l === i) || (side === 1 && u.wrong.r === i))) c = 'wrong shake';
+      return `<button class="opt ${c}" data-act="${side ? 'mR' : 'mL'}" data-v="${i}" ${gone || fb ? 'disabled' : ''}><span>${esc(q.pairs[i][side])}</span></button>`;
+    }).join('');
+    body = `<h2>Match each setup to its punchline</h2><div class="match"><div class="col">${col(u.left, 0)}</div><div class="col">${col(u.right, 1)}</div></div>`;
+  }
+  let foot;
+  if (fb) {
+    const ans = q.t === 'mc' ? q.a : q.t === 'bank' ? q.a.join(' ') : q.t === 'fill' ? q.a[0] : '';
+    const out = L.hearts <= 0;
+    foot = `<footer class="foot ${fb.ok ? 'good' : 'bad'}" aria-live="polite">
+      <h3>${fb.ok ? 'Smooth.' : out ? 'Out of hearts.' : 'Not quite.'}</h3>
+      ${!fb.ok && ans ? `<p><b>Answer:</b> ${esc(ans)}</p>` : ''}
+      ${q.why ? `<p>${esc(q.why)}</p>` : ''}
+      ${!fb.ok && !out ? `<p class="note">You will see this one again before the end.</p>` : ''}
+      <button class="btn wide" data-act="next" id="nextBtn">Continue</button></footer>`;
+  } else if (q.t === 'match') {
+    foot = `<footer class="foot"><p class="hint">Tap a setup on the left, then its punchline on the right.</p></footer>`;
+  } else {
+    foot = `<footer class="foot"><button class="btn wide" id="checkBtn" data-act="check" ${ready() ? '' : 'disabled'}>Check</button></footer>`;
+  }
+  return head + `<main class="stage">${body}</main>` + foot;
+}
+
+function viewDone(){
+  const r = result;
+  return `<main class="end">${CHEESE}
+    <span class="kicker">${esc(r.title)} complete</span>
+    <h2>${r.perfect ? 'Flawless. Dangerously cheesy.' : 'Lesson done. Nicely aged.'}</h2>
+    <div class="tiles">
+      <div class="tile"><b>+${r.xp}</b><span>XP earned</span></div>
+      <div class="tile"><b>${r.acc}%</b><span>accuracy</span></div>
+      <div class="tile"><b>${liveStreak()}</b><span>day streak</span></div>
+    </div>
+    <p class="note">Your grade: <b>${r.grade}</b>. Cheese level is now ${rank()}.</p>
+    <div class="row"><button class="btn" data-act="home">Back to the path</button><button class="btn ghost" data-act="start" data-v="practice">Practice round</button></div>
+  </main>`;
+}
+function viewFail(){
+  const id = L.lesson.id;
+  return `<main class="end">${CHEESE}
+    <span class="kicker">Out of hearts</span>
+    <h2>That one curdled.</h2>
+    <p class="note">Even Romeo bombed a few. Run it again and the lines will stick.</p>
+    <div class="row"><button class="btn" data-act="retry" data-v="${id}">Try again</button><button class="btn ghost" data-act="home">Back to the path</button></div>
+  </main>`;
+}
+
+function render(){
+  app.innerHTML = view === 'home' ? viewHome() : view === 'lesson' ? viewLesson() : view === 'done' ? viewDone() : viewFail();
+  if (view === 'lesson' && L.phase === 'quiz') {
+    const b = document.getElementById('blank');
+    if (b && !L.fb) b.focus();
+    const n = document.getElementById('nextBtn'); if (n) n.focus();
+  } else window.scrollTo(0, 0);
+}
+
+function start(seed){
+  try {
+    const stored = (seed && seed.S) || JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (stored) S = Object.assign(S, stored);
+  } catch (e) {}
+  render();
+}
+window.claude?.hot?.snapshot?.(() => ({S}));
+if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
