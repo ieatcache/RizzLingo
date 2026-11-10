@@ -140,7 +140,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 <body>
 <div id="app"></div>
 <script>
-const CHEESE = `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M40 98v-9M35 98h10M62 98v-9M57 98h10" fill="none" stroke="var(--cheese-deep)" stroke-width="3.5" stroke-linecap="round"/><path d="M22 68 L3 80 L26 82Z" fill="#6F6796" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="50" cy="68" rx="32" ry="22" fill="#9A92C4" stroke="#24163A" stroke-width="4"/><path d="M30 66 Q46 54 60 70 Q44 84 30 66Z" fill="#6F6796" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><circle cx="76" cy="36" r="20" fill="#9A92C4" stroke="#24163A" stroke-width="4"/><path d="M94 31 L113 39 L94 46Z" fill="var(--cheese)" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"/><path d="M58 29 L75 30" stroke="#24163A" stroke-width="3" stroke-linecap="round"/><path d="M74 26 H94 Q96 26 95.5 29 L94 35 Q93 39 88 39 H80 Q75 39 74.5 35Z" fill="#24163A" stroke="#24163A" stroke-width="2" stroke-linejoin="round"/><path d="M79 30 L84 30" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/><circle cx="73" cy="45" r="4" fill="var(--pink)" opacity=".5"/><path d="M70 58 L58 51 L58 65Z M70 58 L82 51 L82 65Z" fill="var(--pink)" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><circle cx="70" cy="58" r="3" fill="#24163A"/><g transform="translate(47 6) rotate(28) scale(1.2)"><path d="M0 0 H28 L26 9 Q16 9 15.5 20 H12.5 Q12 9 2 9Z" fill="#FF8FB5" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><path d="M3 3.5 H25" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g></svg>`;
+const CHEESE = `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M27 56 Q15 58 17 72" fill="none" stroke="#24163A" stroke-width="4" stroke-linecap="round"/><g fill="#C08E45" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"><rect x="38" y="64" width="8" height="31" rx="3"/><rect x="72" y="64" width="8" height="31" rx="3"/></g><path d="M38 50 Q55 12 72 50Z" fill="#E2B36B" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><path d="M74 54 Q84 46 85 26 L99 28 Q98 54 84 68Z" fill="#E2B36B" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><ellipse cx="55" cy="60" rx="30" ry="15" fill="#E2B36B" stroke="#24163A" stroke-width="4"/><path d="M42 47 Q55 26 68 47" fill="#E2B36B"/><g fill="#E2B36B" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"><rect x="28" y="66" width="8" height="30" rx="3"/><rect x="62" y="66" width="8" height="30" rx="3"/></g><path d="M86 12 L84 3 L92 9Z" fill="#C08E45" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><path d="M84 20 Q84 9 96 10 L108 12 Q117 14 116 22 Q115 31 106 31 L92 32 Q84 31 84 20Z" fill="#E2B36B" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><circle cx="98" cy="18" r="3" fill="#24163A"/><path d="M93 13 L102 13" stroke="#24163A" stroke-width="3" stroke-linecap="round"/><circle cx="111" cy="19" r="1.4" fill="#24163A"/><path d="M103 25 Q109 28 113 24" fill="none" stroke="#24163A" stroke-width="2.5" stroke-linecap="round"/><path d="M90 46 L80 40 L80 53Z M90 46 L100 41 L100 54Z" fill="var(--pink)" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><circle cx="90" cy="46.5" r="2.6" fill="#24163A"/><g transform="translate(66 6) rotate(18) scale(.95)"><path d="M0 0 H28 L26 9 Q16 9 15.5 20 H12.5 Q12 9 2 9Z" fill="#FF8FB5" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><path d="M3 3.5 H25" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g></svg>`;
 
 const mc = (p, line, a, wrong, why) => ({t:'mc', p, line, a, wrong, why});
 const bank = (p, line, a, extra, why) => ({t:'bank', p, line, a:a.split(' '), extra, why});
@@ -404,7 +404,7 @@ function viewHome(){
       <div><h3>Practice round</h3><p>Eight random questions from the lessons you have finished.</p></div>
       <button class="btn ghost" data-act="start" data-v="practice">Practice</button>
     </section>
-    <footer class="legal"><button class="link" data-act="terms">Terms of Use</button><span>Mascot: Dave the pigeon</span></footer>`;
+    <footer class="legal"><button class="link" data-act="terms">Terms of Use</button><span>Mascot: Dave the camel</span></footer>`;
 }
 
 function viewLesson(){
@@ -489,7 +489,7 @@ function viewTerms(){
       <li><b>So is your face.</b>We may use your image, your likeness and that one photo you hate for any purpose we like, including billboards.</li>
       <li><b>We can roast you whenever we feel like it.</b>RizzLingo reserves the right to announce, at any time and without notice, that you have absolutely no rizz.</li>
       <li><b>No refunds.</b>The site is free. You will still not be getting your money back.</li>
-      <li><b>Results are not guaranteed.</b>If a line bombs, that is between you, her and the pigeon.</li>
+      <li><b>Results are not guaranteed.</b>If a line bombs, that is between you, her and the camel.</li>
     </ol>
     <p class="fine">The actual fine print: this page is a joke. RizzLingo has no accounts, collects no personal information and claims no real rights to anything of yours. Your progress is saved only in your own browser.</p>
     <div><button class="btn" data-act="home">Back to the path</button></div>
