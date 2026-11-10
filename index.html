@@ -95,6 +95,21 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .place.locked .tag{background:var(--line);color:var(--soft)}
 .unlock{margin:0;background:var(--good-bg);color:var(--ink);border:2px solid var(--good);border-radius:14px;padding:10px 14px}
 @media (max-width:380px){.pgrid{grid-template-columns:1fr}}
+.board:empty{display:none}
+.board{margin-top:34px;display:flex;flex-direction:column;gap:10px}
+.board h2{font-size:28px}
+.join{display:flex;gap:10px;flex-wrap:wrap}
+.join input{flex:1;min-width:150px;font:inherit;font-weight:600;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:11px 14px}
+.err{margin:0;color:var(--bad);font-weight:600;font-size:15px}
+.hintline{margin:0;color:var(--soft);font-size:14px}
+.rows{list-style:none;margin:4px 0 0;padding:0;background:var(--card);border:2px solid var(--line);border-radius:18px;overflow:hidden}
+.rows li{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:2px solid var(--line);font-variant-numeric:tabular-nums}
+.rows li:first-child{border-top:0}
+.rows .pos{width:26px;font-family:var(--display);color:var(--soft)}
+.rows .who{flex:1;font-weight:800;overflow-wrap:anywhere}
+.rows .pts{font-weight:600;color:var(--soft);white-space:nowrap}
+.rows li.me{background:color-mix(in srgb,var(--cheese) 25%,var(--card))}
+.rows li:nth-child(-n+3) .pos{color:var(--pink)}
 @keyframes bob{50%{transform:translateY(-5px)}}
 
 /* lesson */
@@ -443,6 +458,7 @@ function finish(){
   const acc = Math.round(100 * L.total / (L.total + L.miss));
   result = {xp, acc, perfect, unlocked, title: L.lesson.title, grade: acc === 100 ? 'Extra Mature' : acc >= 80 ? 'Sharp Cheddar' : 'Mild Cheddar'};
   L = null; view = 'done'; render();
+  pushXp().then(loadBoard);
 }
 
 const actions = {
@@ -462,6 +478,7 @@ const actions = {
     else { u.wrong = {l: u.selL, r: j}; u.selL = null; }
     render();
   },
+  join: () => join(),
   check: () => check(),
   next: () => next()
 };
@@ -472,12 +489,14 @@ document.addEventListener('click', e => {
   if (fn) fn(b.dataset.v);
 });
 document.addEventListener('input', e => {
+  if (e.target.id === 'uname') { cloud.draft = e.target.value; return; }
   if (e.target.id === 'blank' && L && !L.fb) {
     L.ui.val = e.target.value;
     const c = document.getElementById('checkBtn'); if (c) c.disabled = !ready();
   }
 });
 document.addEventListener('keydown', e => {
+  if (e.target && e.target.id === 'uname' && e.key === 'Enter') { e.preventDefault(); return join(); }
   if (view !== 'lesson' || !L) return;
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -488,6 +507,84 @@ document.addEventListener('keydown', e => {
     actions.pick(+e.key - 1);
   }
 });
+
+/* ---- Accounts + leaderboard (Supabase). Leave both values empty to hide the feature. ---- */
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+const cloud = {on: !!(SUPABASE_URL && SUPABASE_KEY), sb: null, uid: null, name: '', rows: null, msg: '', busy: false, down: false};
+const NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
+
+function boardHTML(){
+  if (!cloud.on) return '';
+  let top;
+  if (cloud.down) top = `<p class="note">The leaderboard can't be reached right now. Your progress is still saved on this device.</p>`;
+  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>`;
+  else top = `<p class="note">Pick a username to put your XP on the board. No email or password.</p>
+    <div class="join"><input id="uname" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="username" aria-label="Username" value="${esc(cloud.draft || '')}">
+    <button class="btn" data-act="join" ${cloud.busy ? 'disabled' : ''}>${cloud.busy ? 'Joining…' : 'Join'}</button></div>
+    ${cloud.msg ? `<p class="err" role="alert">${esc(cloud.msg)}</p>` : `<p class="hintline">3 to 16 letters, numbers or underscores.</p>`}`;
+  let list = '';
+  if (cloud.rows && cloud.rows.length) {
+    list = `<ol class="rows">` + cloud.rows.map((r, i) => `<li class="${r.username === cloud.name ? 'me' : ''}"><span class="pos">${i + 1}</span><span class="who">${esc(r.username)}</span><span class="pts">${r.xp} XP</span></li>`).join('') + `</ol>`;
+  } else if (cloud.rows) list = `<p class="note">Nobody is on the board yet. Be the first.</p>`;
+  else if (!cloud.down) list = `<p class="note">Loading the board…</p>`;
+  return `<h2>Leaderboard</h2>${top}${list}`;
+}
+function paintBoard(){ const el = document.getElementById('board'); if (el && view === 'home') el.innerHTML = boardHTML(); }
+function loadScript(src){ return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
+async function loadBoard(){
+  if (!cloud.sb) return;
+  try {
+    const {data, error} = await cloud.sb.from('players').select('username,xp').order('xp', {ascending: false}).limit(25);
+    if (error) throw error;
+    cloud.rows = data; cloud.down = false;
+  } catch (e) { cloud.down = true; }
+  paintBoard();
+}
+async function cloudInit(){
+  if (!cloud.on) return;
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
+    cloud.sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const {data} = await cloud.sb.auth.getSession();
+    if (data && data.session) {
+      cloud.uid = data.session.user.id;
+      const me = await cloud.sb.from('players').select('username,xp').eq('id', cloud.uid).maybeSingle();
+      if (me.data) {
+        cloud.name = me.data.username;
+        if (me.data.xp > S.xp) { S.xp = me.data.xp; save(); if (view === 'home') render(); }
+        else if (me.data.xp < S.xp) await pushXp();
+      }
+    }
+    await loadBoard();
+  } catch (e) { cloud.down = true; paintBoard(); }
+}
+async function pushXp(){
+  if (!cloud.sb || !cloud.uid || !cloud.name) return;
+  try { await cloud.sb.from('players').update({xp: S.xp, updated_at: new Date().toISOString()}).eq('id', cloud.uid); } catch (e) {}
+}
+async function join(){
+  if (!cloud.sb || cloud.busy) return;
+  const el = document.getElementById('uname');
+  const name = (el ? el.value : cloud.draft || '').trim();
+  cloud.draft = name;
+  if (!NAME_RE.test(name)) { cloud.msg = 'Use 3 to 16 letters, numbers or underscores.'; return paintBoard(); }
+  cloud.busy = true; cloud.msg = ''; paintBoard();
+  try {
+    if (!cloud.uid) {
+      const {data, error} = await cloud.sb.auth.signInAnonymously();
+      if (error) throw error;
+      cloud.uid = data.user.id;
+    }
+    const {error} = await cloud.sb.from('players').insert({id: cloud.uid, username: name, xp: S.xp});
+    if (error) {
+      cloud.msg = error.code === '23505' ? 'That username is taken. Try another.' : 'Could not join right now. Try again in a minute.';
+    } else { cloud.name = name; cloud.draft = ''; }
+  } catch (e) { cloud.msg = 'Could not join right now. Try again in a minute.'; }
+  cloud.busy = false;
+  paintBoard();
+  if (cloud.name) loadBoard();
+}
 
 function viewHome(){
   const doneCount = LESSONS.filter(l => S.done[l.id]).length;
@@ -525,6 +622,7 @@ function viewHome(){
           <i class="tag">${done ? 'Done · redo' : open ? 'Unlocked' : 'Unlocks at ' + pl.xp + ' XP'}</i></button>`;
       }).join('')}</div>
     </section>
+    <section class="board" id="board">${boardHTML()}</section>
     <section class="practice">
       <div><h3>Practice round</h3><p>Eight random questions from the lessons you have finished.</p></div>
       <button class="btn ghost" data-act="start" data-v="practice">Practice</button>
@@ -620,7 +718,7 @@ function viewTerms(){
       <li><b>No refunds.</b>The site is free. You will still not be getting your money back.</li>
       <li><b>Results are not guaranteed.</b>If a line bombs, that is between you, her and the camel.</li>
     </ol>
-    <p class="fine">The actual fine print: this page is a joke. RizzLingo has no accounts, collects no personal information and claims no real rights to anything of yours. Your progress is saved only in your own browser.</p>
+    <p class="fine">The actual fine print: this page is a joke. RizzLingo claims no real rights to anything of yours. Your progress is saved in your own browser. If you join the leaderboard, we store the username you pick and your XP so they can appear on the board, and nothing else: no email, no password.</p>
     <div><button class="btn" data-act="home">Back to the path</button></div>
   </main>`;
 }
@@ -649,6 +747,7 @@ function start(seed){
     if (stored) S = Object.assign(S, stored);
   } catch (e) {}
   render();
+  cloudInit();
 }
 window.claude?.hot?.snapshot?.(() => ({S}));
 if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? {});
