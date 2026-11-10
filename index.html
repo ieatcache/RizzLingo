@@ -411,9 +411,10 @@ function startLesson(id){
   let lesson;
   if (id === 'practice') {
     const pool = ALL.filter((l, i) => S.done[l.id] || i === 0).flatMap(l => l.q);
-    lesson = {id:'practice', title:'Practice', teach:[], q: shuffle(pool).slice(0, 8)};
+    lesson = {id:'practice', title:'Practice', teach:[], q: shuffle(pool).slice(0, 5)};
   } else lesson = ALL.find(l => l.id === id);
-  L = {lesson, queue: lesson.q.slice(), idx: 0, total: lesson.q.length, right: 0, miss: 0, hearts: 5, phase: lesson.teach.length ? 'teach' : 'quiz', ti: 0, ui: null, fb: null};
+  const qs = id === 'practice' ? lesson.q : shuffle(lesson.q).slice(0, 4);
+  L = {lesson, queue: qs, idx: 0, total: qs.length, right: 0, miss: 0, hearts: 5, phase: lesson.teach.length ? 'teach' : 'quiz', ti: 0, ui: null, fb: null};
   if (L.phase === 'quiz') prep();
   view = 'lesson'; render();
 }
@@ -624,7 +625,7 @@ function viewHome(){
     </section>
     <section class="board" id="board">${boardHTML()}</section>
     <section class="practice">
-      <div><h3>Practice round</h3><p>Eight random questions from the lessons you have finished.</p></div>
+      <div><h3>Practice round</h3><p>Five random questions from the lessons you have finished.</p></div>
       <button class="btn ghost" data-act="start" data-v="practice">Practice</button>
     </section>
     <footer class="legal"><button class="link" data-act="terms">Terms of Use</button><span>Mascot: Dave the camel</span></footer>`;
