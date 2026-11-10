@@ -52,7 +52,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 /* home */
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 10px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px}
-.brand svg{width:44px;height:auto}
+.brand .mascot{width:52px;height:52px}
 .brand h1{font-size:30px;letter-spacing:.5px}
 .stats{display:flex;gap:18px}
 .hero{background:var(--ink);color:var(--bg);border-radius:24px;padding:20px 22px;margin:8px 0 6px;display:flex;flex-direction:column;gap:8px}
@@ -94,7 +94,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .say{margin:0;background:var(--card);border:2px solid var(--ink);border-radius:22px 22px 22px 6px;padding:18px 20px;font-size:21px;font-weight:600;line-height:1.35}
 .note{margin:0;color:var(--soft)}
 .teach{display:flex;gap:14px;align-items:flex-start}
-.teach svg{flex:none;width:64px;height:auto;margin-top:6px}
+.teach .mascot{flex:none;width:76px;height:76px;margin-top:2px}
 .dots{display:flex;gap:6px}
 .dots i{width:22px;height:6px;border-radius:9px;background:var(--line)}
 .dots i.on{background:var(--pink)}
@@ -125,7 +125,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 
 /* end screens */
 .end{flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:30px 0}
-.end svg{width:120px;height:auto}
+.end .mascot{width:150px;height:150px}
 .end h2{font-size:40px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .tile{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px}
@@ -140,7 +140,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 <body>
 <div id="app"></div>
 <script>
-const CHEESE = `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M27 56 Q15 58 17 72" fill="none" stroke="#24163A" stroke-width="4" stroke-linecap="round"/><g fill="#C08E45" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"><rect x="38" y="64" width="8" height="31" rx="3"/><rect x="72" y="64" width="8" height="31" rx="3"/></g><path d="M38 50 Q55 12 72 50Z" fill="#E2B36B" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><path d="M74 54 Q84 46 85 26 L99 28 Q98 54 84 68Z" fill="#E2B36B" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><ellipse cx="55" cy="60" rx="30" ry="15" fill="#E2B36B" stroke="#24163A" stroke-width="4"/><path d="M42 47 Q55 26 68 47" fill="#E2B36B"/><g fill="#E2B36B" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"><rect x="28" y="66" width="8" height="30" rx="3"/><rect x="62" y="66" width="8" height="30" rx="3"/></g><path d="M86 12 L84 3 L92 9Z" fill="#C08E45" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><path d="M84 20 Q84 9 96 10 L108 12 Q117 14 116 22 Q115 31 106 31 L92 32 Q84 31 84 20Z" fill="#E2B36B" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><circle cx="98" cy="18" r="3" fill="#24163A"/><path d="M93 13 L102 13" stroke="#24163A" stroke-width="3" stroke-linecap="round"/><circle cx="111" cy="19" r="1.4" fill="#24163A"/><path d="M103 25 Q109 28 113 24" fill="none" stroke="#24163A" stroke-width="2.5" stroke-linecap="round"/><path d="M90 46 L80 40 L80 53Z M90 46 L100 41 L100 54Z" fill="var(--pink)" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><circle cx="90" cy="46.5" r="2.6" fill="#24163A"/><g transform="translate(66 6) rotate(18) scale(.95)"><path d="M0 0 H28 L26 9 Q16 9 15.5 20 H12.5 Q12 9 2 9Z" fill="#FF8FB5" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><path d="M3 3.5 H25" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g></svg>`;
+const CHEESE = `<img class="mascot" src="dave.png" alt="" width="360" height="360">`;
 
 const mc = (p, line, a, wrong, why) => ({t:'mc', p, line, a, wrong, why});
 const bank = (p, line, a, extra, why) => ({t:'bank', p, line, a:a.split(' '), extra, why});
