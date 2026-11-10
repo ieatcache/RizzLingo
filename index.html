@@ -509,8 +509,8 @@ document.addEventListener('keydown', e => {
 });
 
 /* ---- Accounts + leaderboard (Supabase). Leave both values empty to hide the feature. ---- */
-const SUPABASE_URL = '';
-const SUPABASE_KEY = '';
+const SUPABASE_URL = 'https://mirwcatecdpvjjaovaxn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_gvF23wzNsOMg-Wf8b46zMw_gIreVAsn';
 const cloud = {on: !!(SUPABASE_URL && SUPABASE_KEY), sb: null, uid: null, name: '', rows: null, msg: '', busy: false, down: false};
 const NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
 
