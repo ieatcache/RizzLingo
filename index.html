@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cheddar Pickup Line Trainer</title>
+<title>RizzLingo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
@@ -71,9 +71,16 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .node .tag{display:inline-block;margin-top:4px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--soft)}
 .node.done .tag{background:var(--good-bg);color:var(--good)}
 .node.next .tag{background:var(--pink);color:#fff}
-.practice{margin:28px 0 40px;border:2px dashed var(--line);border-radius:22px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.practice{margin:28px 0 18px;border:2px dashed var(--line);border-radius:22px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .practice p{margin:0;color:var(--soft);font-size:15px}
 .practice h3{font-size:20px}
+.legal{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 0 36px;color:var(--soft);font-size:14px}
+.link{border:0;background:none;padding:0;color:var(--soft);font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.terms{padding:8px 0 40px;display:flex;flex-direction:column;gap:16px;max-width:60ch}
+.terms h2{font-size:34px}
+.terms ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:14px}
+.terms li b{display:block}
+.terms .fine{border:2px dashed var(--line);border-radius:16px;padding:14px;color:var(--soft);font-size:15px}
 @keyframes bob{50%{transform:translateY(-5px)}}
 
 /* lesson */
@@ -133,7 +140,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 <body>
 <div id="app"></div>
 <script>
-const CHEESE = `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M8 70 L102 22 Q114 18 114 32 L114 78 Q114 88 104 88 L18 88 Q8 88 8 78Z" fill="var(--cheese)" stroke="#24163A" stroke-width="4" stroke-linejoin="round"/><circle cx="98" cy="40" r="6" fill="var(--cheese-deep)"/><circle cx="26" cy="77" r="4.5" fill="var(--cheese-deep)"/><circle cx="101" cy="75" r="5" fill="var(--cheese-deep)"/><circle cx="50" cy="66" r="4" fill="var(--pink)" opacity=".55"/><circle cx="84" cy="66" r="4" fill="var(--pink)" opacity=".55"/><circle cx="57" cy="58" r="4" fill="#24163A"/><circle cx="77" cy="58" r="4" fill="#24163A"/><path d="M59 68 Q67 77 75 68" fill="none" stroke="#24163A" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+const CHEESE = `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M40 98v-9M35 98h10M62 98v-9M57 98h10" fill="none" stroke="var(--cheese-deep)" stroke-width="3.5" stroke-linecap="round"/><path d="M22 68 L3 80 L26 82Z" fill="#6F6796" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="50" cy="68" rx="32" ry="22" fill="#9A92C4" stroke="#24163A" stroke-width="4"/><path d="M30 66 Q46 54 60 70 Q44 84 30 66Z" fill="#6F6796" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><circle cx="76" cy="36" r="20" fill="#9A92C4" stroke="#24163A" stroke-width="4"/><path d="M94 31 L113 39 L94 46Z" fill="var(--cheese)" stroke="#24163A" stroke-width="3.5" stroke-linejoin="round"/><circle cx="83" cy="33" r="4.5" fill="#24163A"/><circle cx="84.5" cy="31.5" r="1.5" fill="#fff"/><path d="M76 24 L90 26" stroke="#24163A" stroke-width="3.5" stroke-linecap="round"/><circle cx="73" cy="45" r="4" fill="var(--pink)" opacity=".5"/><path d="M70 58 L58 51 L58 65Z M70 58 L82 51 L82 65Z" fill="var(--pink)" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><circle cx="70" cy="58" r="3" fill="#24163A"/><g transform="translate(47 6) rotate(28) scale(1.2)"><path d="M0 0 H28 L26 9 Q16 9 15.5 20 H12.5 Q12 9 2 9Z" fill="#FF8FB5" stroke="#24163A" stroke-width="3" stroke-linejoin="round"/><path d="M3 3.5 H25" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g></svg>`;
 
 const mc = (p, line, a, wrong, why) => ({t:'mc', p, line, a, wrong, why});
 const bank = (p, line, a, extra, why) => ({t:'bank', p, line, a:a.split(' '), extra, why});
@@ -326,6 +333,7 @@ function finish(){
 const actions = {
   start: id => startLesson(id),
   home: () => { L = null; view = 'home'; render(); },
+  terms: () => { view = 'terms'; render(); },
   retry: id => startLesson(id),
   teachNext: () => { L.ti++; if (L.ti >= L.lesson.teach.length) { L.phase = 'quiz'; prep(); } render(); },
   pick: v => { if (L.fb) return; L.ui.sel = +v; render(); },
@@ -380,7 +388,7 @@ function viewHome(){
       <div><h3>${esc(l.title)}</h3><p>${esc(l.sub)}</p><span class="tag">${tag}</span></div></li>`;
   }).join('');
   return `<header class="top">
-      <div class="brand">${CHEESE}<h1>Cheddar</h1></div>
+      <div class="brand">${CHEESE}<h1>RizzLingo</h1></div>
       <div class="stats">
         <div class="stat">${liveStreak()} <small>day streak</small></div>
         <div class="stat">${S.xp} <small>XP</small></div>
@@ -395,7 +403,8 @@ function viewHome(){
     <section class="practice">
       <div><h3>Practice round</h3><p>Eight random questions from the lessons you have finished.</p></div>
       <button class="btn ghost" data-act="start" data-v="practice">Practice</button>
-    </section>`;
+    </section>
+    <footer class="legal"><button class="link" data-act="terms">Terms of Use</button><span>Mascot: Ricky the pigeon</span></footer>`;
 }
 
 function viewLesson(){
@@ -470,6 +479,22 @@ function viewDone(){
     <div class="row"><button class="btn" data-act="home">Back to the path</button><button class="btn ghost" data-act="start" data-v="practice">Practice round</button></div>
   </main>`;
 }
+function viewTerms(){
+  return `<div class="bar"><button class="x" data-act="home" aria-label="Back to the path">×</button><span class="kicker">The legal bit</span></div>
+  <main class="terms">
+    <h2>Terms of Use</h2>
+    <p class="note">Last updated whenever we felt like it. By reading a single pickup line on RizzLingo you agree to all of the following.</p>
+    <ol>
+      <li><b>All of your stuff is ours.</b>Your XP, your streak, your snacks, your good hoodie and the pickup line you were saving for a special occasion now belong to RizzLingo.</li>
+      <li><b>So is your face.</b>We may use your image, your likeness and that one photo you hate for any purpose we like, including billboards.</li>
+      <li><b>We can roast you whenever we feel like it.</b>RizzLingo reserves the right to announce, at any time and without notice, that you have absolutely no rizz.</li>
+      <li><b>No refunds.</b>The site is free. You will still not be getting your money back.</li>
+      <li><b>Results are not guaranteed.</b>If a line bombs, that is between you, her and the pigeon.</li>
+    </ol>
+    <p class="fine">The actual fine print: this page is a joke. RizzLingo has no accounts, collects no personal information and claims no real rights to anything of yours. Your progress is saved only in your own browser.</p>
+    <div><button class="btn" data-act="home">Back to the path</button></div>
+  </main>`;
+}
 function viewFail(){
   const id = L.lesson.id;
   return `<main class="end">${CHEESE}
@@ -481,7 +506,7 @@ function viewFail(){
 }
 
 function render(){
-  app.innerHTML = view === 'home' ? viewHome() : view === 'lesson' ? viewLesson() : view === 'done' ? viewDone() : viewFail();
+  app.innerHTML = view === 'home' ? viewHome() : view === 'lesson' ? viewLesson() : view === 'done' ? viewDone() : view === 'terms' ? viewTerms() : viewFail();
   if (view === 'lesson' && L.phase === 'quiz') {
     const b = document.getElementById('blank');
     if (b && !L.fb) b.focus();
