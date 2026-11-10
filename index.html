@@ -95,7 +95,9 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .place.locked .tag{background:var(--line);color:var(--soft)}
 .unlock{margin:0;background:var(--good-bg);color:var(--ink);border:2px solid var(--good);border-radius:14px;padding:10px 14px}
 @media (max-width:380px){.pgrid{grid-template-columns:1fr}}
-.board:empty{display:none}
+.board:empty,.authbox:empty{display:none}
+.authbox{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:16px 18px;margin:6px 0 10px;display:flex;flex-direction:column;gap:10px}
+.authbox h2{font-size:24px}
 .board{margin-top:34px;display:flex;flex-direction:column;gap:10px}
 .board h2{font-size:28px}
 .join{display:flex;gap:10px;flex-wrap:wrap}
@@ -494,9 +496,9 @@ const actions = {
   },
   auth: () => auth(),
   mode: () => { cloud.mode = cloud.mode === 'in' ? 'join' : 'in'; cloud.msg = ''; cloud.note = ''; paintBoard(); },
-  goAuth: () => { cloud.mode = 'in'; cloud.msg = ''; paintBoard(); const b = document.getElementById('board'); if (b && b.scrollIntoView) b.scrollIntoView({behavior: 'smooth'}); const u = document.getElementById('uname'); if (u && u.focus) u.focus({preventScroll: true}); },
+  goAuth: () => { cloud.mode = 'in'; cloud.msg = ''; paintBoard(); const b = document.getElementById('authbox'); if (b && b.scrollIntoView) b.scrollIntoView({behavior: 'smooth', block: 'center'}); const u = document.getElementById('uname'); if (u && u.focus) u.focus({preventScroll: true}); },
   menu: () => { cloud.menu = !cloud.menu; paintBoard(); },
-  pwAsk: () => { cloud.menu = false; cloud.pwForm = true; cloud.msg = ''; cloud.note = ''; paintBoard(); const b = document.getElementById('board'); if (b && b.scrollIntoView) b.scrollIntoView({behavior: 'smooth'}); },
+  pwAsk: () => { cloud.menu = false; cloud.pwForm = true; cloud.msg = ''; cloud.note = ''; paintBoard(); const b = document.getElementById('authbox'); if (b && b.scrollIntoView) b.scrollIntoView({behavior: 'smooth', block: 'center'}); },
   pwCancel: () => { cloud.pwForm = false; cloud.msg = ''; cloud.note = ''; paintBoard(); },
   pwSave: () => savePw(),
   outAsk: () => signOutNow(),
@@ -550,26 +552,29 @@ function acctHTML(){
   return `<button class="chip" data-act="menu" aria-expanded="${cloud.menu ? 'true' : 'false'}">${esc(cloud.name)} <span aria-hidden="true">▾</span></button>` +
     (cloud.menu ? `<div class="menu"><button data-act="pwAsk">Set password</button><button data-act="outAsk">Sign out</button><button class="danger" data-act="delAsk">Delete account</button></div>` : '');
 }
-function boardHTML(){
-  if (!cloud.on) return '';
+function authHTML(){
+  if (!cloud.on || cloud.down) return '';
   const note = cloud.note ? `<p class="unlock">${esc(cloud.note)}</p>` : '';
   const err = cloud.msg ? `<p class="err" role="alert">${esc(cloud.msg)}</p>` : '';
-  let top;
-  if (cloud.down) top = `<p class="note">The leaderboard can't be reached right now. Your progress is still saved on this device.</p>`;
-  else if (cloud.name && cloud.pwForm) top = `${note}<p class="note">Set a password for <b>${esc(cloud.name)}</b> so you can sign back in, here or on another device.</p>
+  if (cloud.name && cloud.pwForm) return `${note}<p class="note">Set a password for <b>${esc(cloud.name)}</b> so you can sign back in, here or on another device.</p>
     <div class="join"><input id="npass" type="password" maxlength="72" autocomplete="new-password" placeholder="new password" aria-label="New password">
     <button class="btn" data-act="pwSave" ${cloud.busy ? 'disabled' : ''}>Save</button><button class="btn ghost" data-act="pwCancel">Cancel</button></div>${err || `<p class="hintline">At least 4 characters.</p>`}`;
-  else if (cloud.name) top = `${note}<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>
-    <div class="acct"><button class="link" data-act="pwAsk">Set password</button><button class="link" data-act="outAsk">Sign out</button><button class="link" data-act="delAsk">Delete account</button></div>${err}`;
-  else {
-    const inMode = cloud.mode === 'in';
-    top = `${note}<p class="note">${inMode ? 'Sign in with your username and password.' : 'Pick a username and password to put your XP on the board. No email needed.'}</p>
+  if (cloud.name) return note + err;
+  const inMode = cloud.mode === 'in';
+  return `${note}<h2>${inMode ? 'Sign in' : 'Create an account'}</h2>
+    <p class="note">${inMode ? 'Use your username and password.' : 'Pick a username and password to put your XP on the leaderboard. No email needed.'}</p>
     <div class="join"><input id="uname" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" aria-label="Username" value="${esc(cloud.draft || '')}">
     <input id="upass" type="password" maxlength="72" autocomplete="${inMode ? 'current-password' : 'new-password'}" placeholder="password" aria-label="Password" value="${esc(cloud.pdraft || '')}">
     <button class="btn" data-act="auth" ${cloud.busy ? 'disabled' : ''}>${cloud.busy ? 'One moment…' : inMode ? 'Sign in' : 'Join'}</button></div>
     ${err || (inMode ? '' : `<p class="hintline">Username: 3 to 16 letters, numbers or underscores. Password: at least 4 characters.</p>`)}
     <div class="acct"><button class="link" data-act="mode">${inMode ? 'New here? Create an account' : 'Already have an account? Sign in'}</button></div>`;
-  }
+}
+function boardHTML(){
+  if (!cloud.on) return '';
+  let top = '';
+  if (cloud.down) top = `<p class="note">The leaderboard can't be reached right now. Your progress is still saved on this device.</p>`;
+  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>
+    <div class="acct"><button class="link" data-act="pwAsk">Set password</button><button class="link" data-act="outAsk">Sign out</button><button class="link" data-act="delAsk">Delete account</button></div>`;
   let list = '';
   if (cloud.rows && cloud.rows.length) {
     list = `<ol class="rows">` + cloud.rows.map((r, i) => `<li class="${r.username === cloud.name ? 'me' : ''}"><span class="pos">${i + 1}</span><span class="who">${esc(r.username)}</span><span class="pts">${r.xp} XP</span></li>`).join('') + `</ol>`;
@@ -579,6 +584,7 @@ function boardHTML(){
 }
 function paintBoard(){
   if (view !== 'home') return;
+  const x = document.getElementById('authbox'); if (x) x.innerHTML = authHTML();
   const el = document.getElementById('board'); if (el) el.innerHTML = boardHTML();
   const a = document.getElementById('acct'); if (a) a.innerHTML = acctHTML();
 }
@@ -754,6 +760,7 @@ function viewHome(){
         <div class="acctbox" id="acct">${acctHTML()}</div>
       </div>
     </header>
+    <section class="authbox" id="authbox">${authHTML()}</section>
     <section class="hero">
       <span class="eyebrow">Line of the day</span>
       <p>${esc(daily)}</p>
