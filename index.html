@@ -143,6 +143,9 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .menu button:first-child{border-top:0}
 .menu button:hover{background:var(--bg)}
 .menu .danger{color:var(--bad)}
+.offer .mascot{width:110px;height:110px}
+.offer .opt span{font-weight:400;line-height:1.4}
+.offer .opt b{font-weight:800}
 @keyframes bob{50%{transform:translateY(-5px)}}
 
 /* lesson */
@@ -419,7 +422,7 @@ const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 const dayKey = (d) => { d = d || new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 
 const KEY = 'cheddar-v1';
-let S = {xp:0, streak:0, last:'', done:{}};
+let S = {xp:0, streak:0, last:'', done:{}, shades:false};
 let view = 'home';
 let L = null;      // active lesson session
 let result = null; // last finished lesson summary
@@ -469,15 +472,46 @@ function check(){
 function settle(ok){
   const q = cur();
   L.fb = {ok};
-  if (ok) L.right++;
-  else { L.miss++; L.hearts--; if (L.hearts > 0) L.queue.push(q); }
+  if (ok) { L.right++; L.wrongRun = 0; }
+  else { L.miss++; L.hearts--; L.wrongRun = (L.wrongRun || 0) + 1; if (L.hearts > 0) L.queue.push(q); }
   render();
 }
 function next(){
   if (L.hearts <= 0) { view = 'fail'; render(); return; }
+  if (L.wrongRun >= 3 && !L.offered) { L.offered = true; L.offer = {done: ''}; render(); return; }
   L.idx++;
   if (L.idx >= L.queue.length) return finish();
   prep(); render();
+}
+const PEPS = [
+  'You are, without question, the coolest person at this bus stop.',
+  'Dave has seen a lot of people miss three in a row. None of them did it with your style.',
+  'Listen. The lines are bad on purpose. You are doing great.',
+  'Somewhere out there, someone is waiting to groan at your puns. Do not let them down.'
+];
+function viewOffer(){
+  const o = L.offer;
+  if (o.done) return `<main class="stage offer">${CHEESE}
+      <span class="kicker">Dave's trench coat</span>
+      <h2>${esc(o.title)}</h2>
+      <p class="note">${esc(o.done)}</p>
+    </main>
+    <footer class="foot"><button class="btn wide" data-act="offerDone">Back to the level</button></footer>`;
+  return `<main class="stage offer">${CHEESE}
+      <span class="kicker">Three wrong in a row</span>
+      <h2>Psst. Rough patch, friend?</h2>
+      <p class="note">Dave opens one side of a trench coat. "You know what you need? You need to look cool. Studies show camels are extremely trustworthy salesmen."</p>
+      <div class="opts">
+        <button class="opt" data-act="offerMints"><span><b>Emergency Rizz Mints</b><br>"You need these to look cool." Refills your hearts.</span></button>
+        <button class="opt" data-act="offerShades" ${S.shades ? 'disabled' : ''}><span><b>Dave's spare sunglasses</b><br>${S.shades ? 'You already own a pair. Dave respects that.' : 'Shades next to your name on the leaderboard. He has forty pairs.'}</span></button>
+        <button class="opt" data-act="offerPep"><span><b>A pep talk</b><br>Dave says something nice with a straight face. One free heart.</span></button>
+      </div>
+    </main>
+    <footer class="foot"><button class="btn ghost wide" data-act="offerDone">No thanks, Dave</button></footer>`;
+}
+async function pushShades(){
+  if (!cloud.sb || !cloud.uid || !cloud.name || !S.shades) return;
+  try { await cloud.sb.from('players').update({shades: true}).eq('id', cloud.uid); } catch (e) {}
 }
 function finish(){
   const perfect = L.miss === 0;
@@ -527,6 +561,10 @@ const actions = {
   rMash: () => { R.taps++; if (R.taps >= HAGGLE[R.i].n) rWin(); else render(); },
   rPay: () => { R.stage = 'reveal'; render(); },
   delNow: () => deleteAccount(),
+  offerMints: () => { L.hearts = 5; L.offer = {title: 'Minty. Dangerous.', done: 'Hearts refilled to five. Dave nods slowly. "First tin is on the house."'}; render(); },
+  offerShades: () => { S.shades = true; save(); pushShades().then(loadBoard); L.offer = {title: 'Looking sharp.', done: cloud.name ? 'You now have sunglasses next to your name on the leaderboard.' : 'The sunglasses are yours. Join the leaderboard and they show up next to your name.'}; render(); },
+  offerPep: () => { L.hearts = Math.min(5, L.hearts + 1); L.offer = {title: 'Dave clears his throat.', done: PEPS[Math.floor(Math.random() * PEPS.length)] + ' Plus one heart.'}; render(); },
+  offerDone: () => { L.offer = null; L.wrongRun = 0; next(); },
   check: () => check(),
   next: () => next()
 };
@@ -547,7 +585,7 @@ document.addEventListener('input', e => {
 document.addEventListener('keydown', e => {
   if (e.target && e.key === 'Enter' && (e.target.id === 'uname' || e.target.id === 'upass')) { e.preventDefault(); return auth(); }
   if (e.target && e.key === 'Enter' && e.target.id === 'npass') { e.preventDefault(); return savePw(); }
-  if (view !== 'lesson' || !L) return;
+  if (view !== 'lesson' || !L || L.offer) return;
   if (e.key === 'Enter') {
     e.preventDefault();
     if (L.phase === 'teach') actions.teachNext();
@@ -594,7 +632,7 @@ function boardHTML(){
   else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>`;
   let list = '';
   if (cloud.rows && cloud.rows.length) {
-    list = `<ol class="rows">` + cloud.rows.map((r, i) => `<li class="${r.username === cloud.name ? 'me' : ''}"><span class="pos">${i + 1}</span><span class="who">${esc(r.username)}</span><span class="pts">${r.xp} XP</span></li>`).join('') + `</ol>`;
+    list = `<ol class="rows">` + cloud.rows.map((r, i) => `<li class="${r.username === cloud.name ? 'me' : ''}"><span class="pos">${i + 1}</span><span class="who">${esc(r.username)}${r.shades ? ' <span title="Wearing Dave\'s spare sunglasses">😎</span>' : ''}</span><span class="pts">${r.xp} XP</span></li>`).join('') + `</ol>`;
   } else if (cloud.rows) list = `<p class="note">Nobody is on the board yet. Be the first.</p>`;
   else if (!cloud.down) list = `<p class="note">Loading the board…</p>`;
   return `<h2>Leaderboard</h2>${top}${list}`;
@@ -619,7 +657,7 @@ function loadScript(src){ return new Promise((ok, bad) => { const s = document.c
 async function loadBoard(){
   if (!cloud.sb) return;
   try {
-    const {data, error} = await cloud.sb.from('players').select('username,xp').order('xp', {ascending: false}).limit(25);
+    const {data, error} = await cloud.sb.from('players').select('*').order('xp', {ascending: false}).limit(25);
     if (error) throw error;
     cloud.rows = data; cloud.down = false;
   } catch (e) { cloud.down = true; }
@@ -633,9 +671,10 @@ async function cloudInit(){
     const {data} = await cloud.sb.auth.getSession();
     if (data && data.session) {
       cloud.uid = data.session.user.id;
-      const me = await cloud.sb.from('players').select('username,xp').eq('id', cloud.uid).maybeSingle();
+      const me = await cloud.sb.from('players').select('*').eq('id', cloud.uid).maybeSingle();
       if (me.data) {
         cloud.name = me.data.username;
+        if (me.data.shades && !S.shades) { S.shades = true; save(); } else if (S.shades && !me.data.shades) pushShades();
         if (me.data.xp > S.xp) { S.xp = me.data.xp; save(); if (view === 'home') render(); }
         else if (me.data.xp < S.xp) await pushXp();
       }
@@ -678,7 +717,7 @@ async function auth(){
     cloud.draft = ''; cloud.pdraft = '';
   } catch (e) { cloud.msg = e && e.code === '23505' ? 'That username is taken. Try another.' : explain(e); }
   cloud.busy = false;
-  if (cloud.name) { render(); pushXp().then(loadBoard); } else paintBoard();
+  if (cloud.name) { render(); pushXp().then(pushShades).then(loadBoard); } else paintBoard();
 }
 async function savePw(){
   if (!cloud.sb || cloud.busy) return;
@@ -807,6 +846,7 @@ function viewLesson(){
   const head = `<div class="bar"><button class="x" data-act="home" aria-label="Quit lesson">×</button>
     <div class="track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
     <span class="hearts" aria-label="${L.hearts} hearts left">♥ ${L.hearts}</span></div>`;
+  if (L.offer) return head + viewOffer();
   if (L.phase === 'teach') {
     const t = L.lesson.teach[L.ti];
     const dots = L.lesson.teach.map((_, i) => `<i class="${i <= L.ti ? 'on' : ''}"></i>`).join('');
