@@ -573,8 +573,7 @@ function boardHTML(){
   if (!cloud.on) return '';
   let top = '';
   if (cloud.down) top = `<p class="note">The leaderboard can't be reached right now. Your progress is still saved on this device.</p>`;
-  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>
-    <div class="acct"><button class="link" data-act="pwAsk">Set password</button><button class="link" data-act="outAsk">Sign out</button><button class="link" data-act="delAsk">Delete account</button></div>`;
+  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>`;
   let list = '';
   if (cloud.rows && cloud.rows.length) {
     list = `<ol class="rows">` + cloud.rows.map((r, i) => `<li class="${r.username === cloud.name ? 'me' : ''}"><span class="pos">${i + 1}</span><span class="who">${esc(r.username)}</span><span class="pts">${r.xp} XP</span></li>`).join('') + `</ol>`;
