@@ -532,6 +532,13 @@ function boardHTML(){
   return `<h2>Leaderboard</h2>${top}${list}`;
 }
 function paintBoard(){ const el = document.getElementById('board'); if (el && view === 'home') el.innerHTML = boardHTML(); }
+function explain(e){
+  const m = String((e && (e.message || e.msg || e.error_description)) || e || '');
+  if (/anonymous/i.test(m)) return 'Could not join: anonymous sign-ins are switched off in the database settings.';
+  if (/captcha/i.test(m)) return 'Could not join: the database is asking for a CAPTCHA.';
+  if (/rate limit|too many/i.test(m)) return 'Too many sign-ups from this network. Try again in an hour.';
+  return 'Could not join right now.' + (m ? ' (' + m.slice(0, 140) + ')' : '');
+}
 function loadScript(src){ return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
 async function loadBoard(){
   if (!cloud.sb) return;
@@ -579,9 +586,9 @@ async function join(){
     }
     const {error} = await cloud.sb.from('players').insert({id: cloud.uid, username: name, xp: S.xp});
     if (error) {
-      cloud.msg = error.code === '23505' ? 'That username is taken. Try another.' : 'Could not join right now. Try again in a minute.';
+      cloud.msg = error.code === '23505' ? 'That username is taken. Try another.' : explain(error);
     } else { cloud.name = name; cloud.draft = ''; }
-  } catch (e) { cloud.msg = 'Could not join right now. Try again in a minute.'; }
+  } catch (e) { cloud.msg = explain(e); }
   cloud.busy = false;
   paintBoard();
   if (cloud.name) loadBoard();
