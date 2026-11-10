@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RizzLingo Investors</title>
+<meta name="description" content="RizzLingo is raising a $2,000,000 seed round. The product, the market, the revenue model and the plan.">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#24163A">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RizzLingo">
+<meta property="og:title" content="RizzLingo Investors">
+<meta property="og:description" content="RizzLingo is raising a $2,000,000 seed round. The product, the market, the revenue model and the plan.">
+<meta property="og:url" content="https://rizzlingo.com/investors/">
+<meta property="og:image" content="https://rizzlingo.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one reading column, a dark opening band with the ask, then short sections that alternate prose, cards and tables. */
+:root{
+  --bg:#F1EDFB; --card:#FFFFFF; --ink:#24163A; --soft:#5B4D78; --line:#D9D0EE;
+  --cheese:#FFB81C; --pink:#D81B60; --band:#24163A; --band-ink:#FBF9FF; --band-soft:#C9BEE6;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#170E24; --card:#241737; --ink:#F5EFFF; --soft:#B3A6CC; --line:#3C2C58;
+    --cheese:#FFC23D; --pink:#FF5C8F; --band:#0F0819; --band-ink:#F5EFFF; --band-soft:#B3A6CC;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#170E24; --card:#241737; --ink:#F5EFFF; --soft:#B3A6CC; --line:#3C2C58;
+  --cheese:#FFC23D; --pink:#FF5C8F; --band:#0F0819; --band-ink:#F5EFFF; --band-soft:#B3A6CC;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.1;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:48px;height:48px}
+.brand span{font-family:var(--display);font-size:28px}
+.top nav a{font-weight:800;font-size:15px}
+.band{background:var(--band);color:var(--band-ink)}
+.hero{display:flex;align-items:center;gap:28px;padding:44px 0 48px;flex-wrap:wrap}
+.hero div{flex:1;min-width:260px;display:flex;flex-direction:column;gap:14px}
+.hero img{width:220px;height:220px;max-width:100%}
+.eyebrow{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cheese)}
+.hero h1{font-size:clamp(44px,9vw,76px);color:var(--cheese)}
+.hero .lead{font-size:21px;font-weight:600;line-height:1.35;max-width:32ch}
+.hero .sub{color:var(--band-soft);max-width:46ch}
+main{display:flex;flex-direction:column;gap:52px;padding:48px 0 40px}
+section{display:flex;flex-direction:column;gap:16px}
+section h2{font-size:32px}
+section > p{max-width:65ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.card h3{font-family:var(--body);font-weight:800;font-size:18px;line-height:1.25}
+.card p{color:var(--soft);font-size:15.5px;line-height:1.45}
+.card.dark{background:var(--band);color:var(--band-ink)}
+.card.dark p{color:var(--band-soft)}
+.card .tag{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--pink)}
+.card.dark .tag{color:var(--cheese)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px}
+.stats b{display:block;font-family:var(--display);font-weight:400;font-size:52px;line-height:1;color:var(--pink);font-variant-numeric:tabular-nums}
+.stats span{font-weight:600}
+.scroll{overflow-x:auto;border:2px solid var(--ink);border-radius:18px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15.5px}
+th,td{text-align:left;padding:11px 14px;border-top:2px solid var(--line);vertical-align:top}
+tr:first-child th{border-top:0;color:var(--soft);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+td:first-child{font-weight:800}
+.num td:not(:first-child),.num th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+tr.total td{font-weight:800}
+.fine{color:var(--soft);font-size:14px;max-width:70ch}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(120px,210px) 1fr auto;gap:12px;align-items:center}
+.bar span{font-weight:600}
+.bar i{height:20px;border-radius:6px;background:var(--ink)}
+.bar:first-child i{background:var(--pink)}
+.bar b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ask{padding:44px 0 48px;display:flex;flex-direction:column;gap:14px}
+.ask h2{font-size:clamp(48px,11vw,96px);color:var(--cheese)}
+.ask .line{font-size:21px;font-weight:600;max-width:36ch}
+.ask .gold{color:var(--cheese);font-weight:800;max-width:44ch}
+.btn{display:inline-block;align-self:flex-start;border:2px solid var(--band-ink);background:var(--cheese);color:#24163A;font-weight:800;padding:12px 20px;border-radius:14px;text-decoration:none;box-shadow:0 4px 0 var(--band-ink)}
+.foot{padding:22px 0 40px;color:var(--soft);font-size:14px;display:flex;flex-direction:column;gap:8px}
+@media (max-width:480px){.bar{grid-template-columns:1fr auto}.bar i{grid-column:1 / -1;order:3}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/"><img src="/dave.png" alt=""><span>RizzLingo</span></a>
+    <nav><a href="/">Play the game</a></nav>
+  </header>
+</div>
+
+<div class="band"><div class="wrap hero">
+  <div>
+    <span class="eyebrow">Investors · Seed round · November 2026</span>
+    <h1>Raising $2,000,000</h1>
+    <p class="lead">RizzLingo is the game that teaches you how to talk to people you like.</p>
+    <p class="sub">Cheesy pickup lines and real conversation skills, in four-question levels with XP, streaks, unlockable places and a leaderboard. The mascot is Dave, a camel.</p>
+  </div>
+  <img src="/dave.png" alt="Dave, the RizzLingo camel mascot, wearing sunglasses">
+</div></div>
+
+<div class="wrap"><main>
+
+<section>
+  <h2>The problem</h2>
+  <p>In Pew Research Center's 2022 survey, 64% of men who had used a dating app in the past year said they felt insecure about how few messages they got. The tools people have either do nothing about that or do the talking for them.</p>
+  <div class="cards">
+    <div class="card"><h3>Dating apps</h3><p>Hand you a match and leave you alone with a blank message box.</p></div>
+    <div class="card"><h3>AI reply apps</h3><p>Write the line for you. You learn nothing, and they do not work at a bus stop.</p></div>
+    <div class="card"><h3>Advice videos</h3><p>Tell you what to say. Nobody makes you practice it.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The product: practice, disguised as a joke</h2>
+  <div class="cards">
+    <div class="card"><span class="tag">1 · Learn</span><p>Two or three lines per level, from parking tickets to the periodic table.</p></div>
+    <div class="card"><span class="tag">2 · Get challenged</span><p>Four questions. Finish the line, build it, type it, match it. Five hearts.</p></div>
+    <div class="card"><span class="tag">3 · Unlock places</span><p>Earn XP to open the coffee shop, the DMV, the toilet store and the ER.</p></div>
+  </div>
+  <p>Half the curriculum is real skill: open questions, reading the room, and taking a no gracefully.</p>
+</section>
+
+<section>
+  <h2>Live today</h2>
+  <div class="stats">
+    <div><b>14</b><span>levels</span></div>
+    <div><b>8</b><span>unlockable places</span></div>
+    <div><b>1</b><span>day to build</span></div>
+    <div><b>1</b><span>camel</span></div>
+  </div>
+  <p>Accounts, a public leaderboard, streaks and XP are shipped, and you can <a href="/">play it now</a>. The product is days old, so there is no usage data yet. Retention numbers will be added here after the first 30 days.</p>
+</section>
+
+<section>
+  <h2>The market</h2>
+  <p>RizzLingo sits between two categories where people already pay monthly: habit-forming learning apps and dating apps.</p>
+  <div class="scroll"><table>
+    <tr><th>Comparable</th><th>Scale</th><th>What it proves</th></tr>
+    <tr><td>Duolingo</td><td>$309.0M revenue in Q3 2026, 13.1M paid subscribers</td><td>Game-like lessons build a paying habit</td></tr>
+    <tr><td>Dating apps</td><td>More than $6B revenue in 2024, about 364M users</td><td>The audience already spends on romance</td></tr>
+    <tr><td>Match Group</td><td>$3.5B revenue in 2025, payers down 5%</td><td>Users are restless</td></tr>
+    <tr><td>Rizz (AI replies)</td><td>More than 7.5M downloads, about $300K a month by third-party estimate</td><td>A small team can earn from this need</td></tr>
+  </table></div>
+  <div class="cards">
+    <div class="card"><h3>Dating apps</h3><p>supply the match</p></div>
+    <div class="card"><h3>AI reply apps</h3><p>supply the sentence</p></div>
+    <div class="card dark"><h3>RizzLingo</h3><p>supplies the practice, and is funny about it</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Five ways it makes money</h2>
+  <div class="scroll"><table>
+    <tr><th>Stream</th><th>How it works</th><th>Starts</th></tr>
+    <tr><td>RizzLingo Plus</td><td>$6.99 a month: unlimited hearts, no ads, every place unlocked</td><td>2027</td></tr>
+    <tr><td>In-app purchases</td><td>Heart refills, streak freezes, outfits for Dave</td><td>2027</td></tr>
+    <tr><td>Ads</td><td>Rewarded video for a free heart</td><td>2027</td></tr>
+    <tr><td>Sponsored places</td><td>A business pays to put its own name on a place, such as The Coffee Shop</td><td>2028</td></tr>
+    <tr><td>Merchandise</td><td>Dave shirts, stickers, the pickup-line card deck</td><td>2027</td></tr>
+  </table></div>
+  <p class="fine">Later, not in the numbers: an AI practice partner, live events, content licensing and date-night affiliates.</p>
+</section>
+
+<section>
+  <h2>A business can buy the name on a place</h2>
+  <p>Every place in the app has a plain name: the coffee shop, the bagel shop, the toilet store. A business can pay to replace that generic name with its own, on the level, in the lines and on share cards. Sponsored names are labeled as sponsored.</p>
+  <div class="cards">
+    <div class="card"><span class="tag">Local</span><p>A neighborhood business names the place for players in its city.</p></div>
+    <div class="card"><span class="tag">National</span><p>A popular chain names the place for every player.</p></div>
+    <div class="card dark"><span class="tag">Own a place</span><p>Run a business and want your name in the game? Write to founder@rizzlingo.com.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The path to $4.1M</h2>
+  <div class="scroll"><table class="num">
+    <tr><th></th><th>2027</th><th>2028</th><th>2029</th></tr>
+    <tr><td>Monthly players</td><td>60,000</td><td>250,000</td><td>700,000</td></tr>
+    <tr><td>Subscribers</td><td>1,200</td><td>7,500</td><td>28,000</td></tr>
+    <tr><td>Revenue</td><td>$155K</td><td>$1.13M</td><td>$4.14M</td></tr>
+    <tr><td>Operating costs</td><td>$1.25M</td><td>$1.85M</td><td>$3.40M</td></tr>
+    <tr class="total"><td>Net</td><td>-$1.09M</td><td>-$0.72M</td><td>+$0.74M</td></tr>
+  </table></div>
+  <p class="fine">These are projections built on stated assumptions, not results. RizzLingo has no revenue today. Player count is the most sensitive input.</p>
+</section>
+
+<section>
+  <h2>Where the $2M goes</h2>
+  <div class="bars">
+    <div class="bar"><span>Team of five, 18 months</span><i style="width:100%"></i><b>$1.1M · 55%</b></div>
+    <div class="bar"><span>Marketing and creators</span><i style="width:36.4%"></i><b>$400K · 20%</b></div>
+    <div class="bar"><span>Product and infrastructure</span><i style="width:18.2%"></i><b>$200K · 10%</b></div>
+    <div class="bar"><span>Legal and compliance</span><i style="width:9.1%"></i><b>$100K · 5%</b></div>
+    <div class="bar"><span>Reserve</span><i style="width:18.2%"></i><b>$200K · 10%</b></div>
+  </div>
+</section>
+
+<section>
+  <h2>Four phases, four gates</h2>
+  <div class="cards">
+    <div class="card dark"><span class="tag">1 · Now to Mar 2027</span><h3>Prove it</h3><p>30 days of usage data, real terms, trademark check, close the round.</p><p><b>Gate: retention known</b></p></div>
+    <div class="card"><span class="tag">2 · Apr to Sep 2027</span><h3>Ship the apps</h3><p>iOS and Android, RizzLingo Plus, 50 levels.</p><p><b>Gate: 10,000 players</b></p></div>
+    <div class="card"><span class="tag">3 · Oct 2027 to Jun 2028</span><h3>Grow</h3><p>Creator challenges, AI practice partner, group leaderboards.</p><p><b>Gate: 100,000 players</b></p></div>
+    <div class="card"><span class="tag">4 · Jul 2028 to 2029</span><h3>Monetize</h3><p>Sponsored places, merchandise, live nights, break-even.</p><p><b>Gate: $1M a year</b></p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Team</h2>
+  <div class="cards">
+    <div class="card dark"><span class="tag">Founder</span><h3>Andrew O'Neill</h3></div>
+    <div class="card dark"><span class="tag">Co-founder</span><h3>Codey Dulmaine</h3></div>
+    <div class="card"><h3>First four hires</h3><p>Mobile engineer, head writer, designer and animator, growth and creator lead.</p></div>
+  </div>
+  <p>The founders conceived RizzLingo and shipped the live product in one day.</p>
+</section>
+
+<section>
+  <h2>What could go wrong</h2>
+  <div class="cards">
+    <div class="card"><h3>The joke wears off</h3><p>New places every two weeks, streaks, and the AI practice partner.</p></div>
+    <div class="card"><h3>No traction yet</h3><p>We bring 30 to 60 days of retention data to every pitch.</p></div>
+    <div class="card"><h3>Name and mascot</h3><p>Trademark counsel before brand spend. Ready to rename or redraw.</p></div>
+    <div class="card"><h3>Tone</h3><p>Consent and read-the-room lessons stay central. 17+ rating.</p></div>
+  </div>
+</section>
+
+</main></div>
+
+<div class="band"><div class="wrap ask">
+  <span class="eyebrow">The ask</span>
+  <h2>$2,000,000</h2>
+  <p class="line">to make Dave the most famous camel on the internet.</p>
+  <p class="gold">We can build this without your money. You are here because you want to own a piece of it.</p>
+  <a class="btn" href="mailto:founder@rizzlingo.com">Email the founders</a>
+  <p class="sub" style="color:var(--band-soft)">Andrew O'Neill and Codey Dulmaine · founder@rizzlingo.com</p>
+</div></div>
+
+<div class="wrap"><footer class="foot">
+  <p>Sources: <a href="https://www.sec.gov/Archives/edgar/data/0001562088/000162828026069474/q3fy26duolingo9-30x26share.htm">Duolingo Q3 2026 shareholder letter</a> · <a href="https://ir.mtch.com/investor-relations/news-events/news-events/news-details/2026/Match-Group-Announces-Fourth-Quarter-and-Full-Year-Results">Match Group 2025 results</a> · <a href="https://www.globaldatinginsights.com/featured/global-dating-app-revenues-top-6-billion-likely-primed-to-grow/">Business of Apps via Global Dating Insights</a> · <a href="https://www.pewresearch.org/short-reads/2023/02/02/key-findings-about-online-dating-in-the-u-s/">Pew Research Center</a> · <a href="https://www.globaldatinginsights.com/featured/ai-assisted-dating-app-rizz-continues-to-grow/">Global Dating Insights on Rizz</a> · <a href="https://adapty.io/paywall-library/rizz/">Adapty estimate</a>. Figures as of November 9, 2026.</p>
+  <p>This page describes the company and its plans. It is not an offer to sell securities or a solicitation of an offer to buy them. Forward-looking figures are projections and may not be achieved.</p>
+  <p><a href="/">Back to RizzLingo</a></p>
+</footer></div>
+</body>
+</html>
