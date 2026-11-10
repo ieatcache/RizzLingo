@@ -81,6 +81,20 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .terms ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:14px}
 .terms li b{display:block}
 .terms .fine{border:2px dashed var(--line);border-radius:16px;padding:14px;color:var(--soft);font-size:15px}
+.places{margin-top:34px;display:flex;flex-direction:column;gap:10px}
+.places h2{font-size:28px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.place{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:14px;box-shadow:0 4px 0 var(--ink);transition:transform .06s, box-shadow .06s}
+.place:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.place b{font-family:var(--display);font-weight:400;font-size:19px;line-height:1.15}
+.place span{color:var(--soft);font-size:14px;line-height:1.3}
+.place .tag{font-style:normal;margin-top:6px;font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--cheese);color:#24163A}
+.place.done .tag{background:var(--good-bg);color:var(--good)}
+.place.locked{border-color:var(--line);box-shadow:0 4px 0 var(--line);background:transparent}
+.place.locked b,.place.locked span{color:var(--soft)}
+.place.locked .tag{background:var(--line);color:var(--soft)}
+.unlock{margin:0;background:var(--good-bg);color:var(--ink);border:2px solid var(--good);border-radius:14px;padding:10px 14px}
+@media (max-width:380px){.pgrid{grid-template-columns:1fr}}
 @keyframes bob{50%{transform:translateY(-5px)}}
 
 /* lesson */
@@ -240,6 +254,105 @@ const LESSONS = [
     mc('The whole course in one sentence?', '', 'Cheese opens the door, kindness keeps it open', ['More lines, more volume','Never take no for an answer','Puns are a personality'], 'Graduated with honors in Gouda.')
   ]}
 ];
+const PLACES = [
+{ id:'coffee', xp:15, title:'The Coffee Shop', sub:'Lines with extra foam',
+  teach:[
+    {line:"Words can't espresso how much you bean to me.", note:'Two puns in one sentence. Deliver it while waiting for your order, never while she is ordering.'},
+    {line:"I've bean thinking about you a latte.", note:'Coffee shops are easy mode. You are both standing around with nothing to do.'}
+  ],
+  q:[
+    mc(FINISH, "Words can't espresso…", 'how much you bean to me.', ['how late I am for work.','why this costs nine dollars.','my order.']),
+    fill("I've bean thinking about you a", '.', ['latte','lot']),
+    mc(FINISH, 'You must be a double shot, because…', 'you make my heart race.', ['you are bitter.','you cost extra.','I regret you by 3 p.m.']),
+    mc('She is in line behind you. Good move?', '', 'Make a quick joke about the menu and see if she bites', ['Order for her without asking','Read her laptop screen over her shoulder','Block the pickup counter until she talks to you'], 'Light, short, easy to ignore if she wants to.'),
+    bank('Build the line', 'The barista calls your name.', 'I like you a latte', ['decaf','tea','mocha'])
+  ]},
+{ id:'bagel', xp:30, title:'The Bagel Shop', sub:'Everything, toasted',
+  teach:[
+    {line:"You're my everything bagel.", note:'Short, warm and carb-based. Works best before 10 a.m.'},
+    {line:"You're the cream cheese to my bagel. Without you I'd just be plain.", note:'Self-deprecating puns are the safest kind.'}
+  ],
+  q:[
+    mc(FINISH, "You're my everything…", 'bagel.', ['burrito.','coupon.','problem.']),
+    fill("Without you I'd just be", '.', ['plain']),
+    mc(FINISH, 'Are you a bagel? Because…', "I'd like to spend the hole day with you.", ['you are a bit dense.','you are everywhere in this city.','I want you sliced.']),
+    bank('Build the line', 'She asks how you feel about her.', 'I have lox of love for you', ['toast','rye','capers']),
+    mc("The line is long and she is next to you. What's the opener?", '', 'Ask what she recommends here', ['Cut in front of her','Critique her order','Announce your macros'], 'Asking for a recommendation is the oldest open question there is.')
+  ]},
+{ id:'restaurant', xp:45, title:'The Restaurant', sub:'Table for two, hopefully',
+  teach:[
+    {line:'Are you on the menu? Because you look like the special.', note:'Restaurant rule: the bar and the wait for a table are fair game. A table full of her friends is not.'},
+    {line:'If you were a dessert, you would be the one I skip dinner for.', note:'Food compliments land better here than anywhere else.'}
+  ],
+  q:[
+    mc(FINISH, 'If you were a dessert, you would be…', 'the one I skip dinner for.', ['the fruit cup.','market price.','sent back.']),
+    fill("Are you the bread basket? Because I can't stop reaching for", '.', ['you']),
+    mc(FINISH, 'Table for two? I was hoping…', 'the second one was you.', ['for a booth.','you were paying.','for separate checks.']),
+    mc('She is eating dinner with three friends.', '', 'Leave her be. A full table is not an opening', ['Pull up a chair','Send over eleven desserts','Have the waiter deliver a poem with the check'], 'Timing is half the game.'),
+    bank('Build the line', 'You are both waiting at the host stand.', 'Are you on the menu', ['bill','tip','fork'])
+  ]},
+{ id:'bus', xp:60, title:'The Bus Stop', sub:'Romance, running eight minutes late',
+  teach:[
+    {line:"Is this the bus to your heart? I've got exact change.", note:'A bus stop gives you a built-in time limit. Say one thing, smile, see what comes back.'},
+    {line:"I hope the bus is late. I'm enjoying the wait.", note:'The mildest line in the whole course, and one of the best.'}
+  ],
+  q:[
+    mc(FINISH, 'Are you the 42 bus? Because…', "I've been waiting for you all morning.", ['you smell like diesel.','you never show up.','you are full.']),
+    fill("I'd miss my", 'for you.', ['stop','bus']),
+    mc(FINISH, 'Is this seat taken?', 'And are you?', ['Because I am taking it.','It is now.','I have a lot of bags.']),
+    mc('She has headphones in and is staring down the road.', '', 'Let her wait in peace', ['Tap her shoulder twice','Wave a hand in front of her face','Start talking louder'], 'Headphones are a closed door.'),
+    bank('Build the line', 'The sign says 14 minutes.', "I hope the bus is late", ['early','taxi','never'])
+  ]},
+{ id:'dmv', xp:75, title:'The DMV', sub:'Now serving: you',
+  teach:[
+    {line:"Now serving number 47. And you're a perfect ten.", note:'Everyone at the DMV is bored and suffering. Shared misery is a great icebreaker.'},
+    {line:"I've been waiting three hours, and you're the first thing worth the wait.", note:'Complain about the line together first. Then the cheese.'}
+  ],
+  q:[
+    mc(FINISH, 'Is that your license photo? Because…', "even the DMV couldn't make you look bad.", ['wow.','it expired.','mine is worse.']),
+    fill("Now serving number 47. And you're a perfect", '.', ['ten','10']),
+    mc(FINISH, 'Are you a parallel parking spot? Because…', "I'd try all day to get next to you.", ['I always hit the curb.','you are too small.','I failed this part.']),
+    mc(FINISH, 'Are you here for a renewal? Because…', 'you just renewed my faith in love.', ['you look expired.','so am I, obviously.','the line is over there.']),
+    bank('Build the line', 'The form asks for an emergency contact.', 'Can I put you down', ['up','mom','nobody'])
+  ]},
+{ id:'toilet', xp:90, title:'The Toilet Store', sub:'Love among the display models',
+  teach:[
+    {line:'Are you a toilet? Because you bowl me over.', note:'If you meet someone while shopping for toilets, the hard part is already behind you.'},
+    {line:"I'm not just browsing. I'm flush with feelings for you.", note:'Commit to the bit. Half-hearted plumbing puns help no one.'}
+  ],
+  q:[
+    fill('Are you a toilet? Because you', 'me over.', ['bowl']),
+    mc(FINISH, "I'm not just browsing…", "I'm flush with feelings for you.", ['I am lost.','I work here.','I need a plunger, urgently.']),
+    mc(FINISH, 'Our love is like a low-flow model:', 'efficient and good for the planet.', ['weak.','needs two tries.','on clearance.']),
+    bank('Build the line', 'She asks which one you like best.', 'You are my number one', ['two','three','seat']),
+    mc('It worked. Where should the first date be?', '', 'Coffee. Anywhere but the toilet store', ['Aisle four, by the bidets','The returns desk','A second, larger toilet store'], 'Graduate from the showroom.')
+  ]},
+{ id:'doctor', xp:110, title:"The Doctor's Office", sub:'Waiting room material',
+  teach:[
+    {line:'Is there a doctor in the house? Because my heart just skipped a beat.', note:'Waiting rooms are tricky. If she looks unwell or worried, keep this one in your pocket.'},
+    {line:'Are you my appendix? Because I have a funny feeling I should take you out.', note:'A classic. Say it and immediately look sorry.'}
+  ],
+  q:[
+    mc(FINISH, 'You must be a stethoscope, because…', 'you can hear my heart racing.', ['you are cold.','you hang around necks.','I need a second opinion.']),
+    fill('Are you a vitamin? Because I need you every', '.', ['day']),
+    mc(FINISH, 'Are you my appendix? Because…', 'I have a funny feeling I should take you out.', ['I could live without you.','you might burst.','nobody knows what you do.']),
+    mc('She looks pale and keeps checking the clock.', '', 'Leave her alone. Sick and anxious is not flirting time', ['Ask what she has','Offer your own diagnosis','Sit closer to cheer her up'], 'Read the room before you read the line.'),
+    bank('Build the line', 'The nurse calls your name.', 'My heart just skipped a beat', ['knee','shot','copay'])
+  ]},
+{ id:'er', xp:130, title:'The ER', sub:'Expert level. Do not attempt.',
+  teach:[
+    {line:'Call an ambulance, because you just took my breath away.', note:'The real lesson: the ER is the one place you keep every line to yourself. Learn these for later.'},
+    {line:'Are you a defibrillator? Because you restarted my heart.', note:'Strong material. Save it for somewhere without a triage desk.'}
+  ],
+  q:[
+    mc(FINISH, 'Call an ambulance, because…', 'you just took my breath away.', ['I ate the gas station sushi.','I am parked in its spot.','my insurance is great.']),
+    fill('Are you a defibrillator? Because you restarted my', '.', ['heart']),
+    mc(FINISH, 'On a scale of one to ten, my pain is a zero…', "and you're the ten.", ['and my bill is a ten.','so I will be going.','but ask me again in an hour.']),
+    mc('You are actually in the ER. She is three seats down holding an ice pack.', '', 'Say nothing. Nobody in an ER wants a pickup line', ['Ask what she is in for','Offer to kiss it better','Compare injuries, then lines'], 'Knowing when not to use a line is the final skill.'),
+    bank('Build the line you will say somewhere else, later', '', "I'd wait six hours for you", ['seven','minutes','never'])
+  ]}
+];
+const ALL = LESSONS.concat(PLACES);
 const DAILY = [
   "Are you a parking ticket? Because you've got FINE written all over you.",
   "You must be a cheese, because you're looking Gouda.",
@@ -282,9 +395,9 @@ function prep(){
 function startLesson(id){
   let lesson;
   if (id === 'practice') {
-    const pool = LESSONS.filter((l, i) => S.done[l.id] || i === 0).flatMap(l => l.q);
+    const pool = ALL.filter((l, i) => S.done[l.id] || i === 0).flatMap(l => l.q);
     lesson = {id:'practice', title:'Practice', teach:[], q: shuffle(pool).slice(0, 8)};
-  } else lesson = LESSONS.find(l => l.id === id);
+  } else lesson = ALL.find(l => l.id === id);
   L = {lesson, queue: lesson.q.slice(), idx: 0, total: lesson.q.length, right: 0, miss: 0, hearts: 5, phase: lesson.teach.length ? 'teach' : 'quiz', ti: 0, ui: null, fb: null};
   if (L.phase === 'quiz') prep();
   view = 'lesson'; render();
@@ -322,11 +435,13 @@ function finish(){
   const xp = 10 + (perfect ? 5 : 0);
   const today = dayKey(), y = new Date(); y.setDate(y.getDate() - 1);
   if (S.last !== today) { S.streak = (S.last === dayKey(y)) ? S.streak + 1 : 1; S.last = today; }
+  const before = S.xp;
   S.xp += xp;
+  const unlocked = PLACES.filter(pl => pl.xp > before && pl.xp <= S.xp).map(pl => pl.title);
   if (L.lesson.id !== 'practice') S.done[L.lesson.id] = true;
   save();
   const acc = Math.round(100 * L.total / (L.total + L.miss));
-  result = {xp, acc, perfect, title: L.lesson.title, grade: acc === 100 ? 'Extra Mature' : acc >= 80 ? 'Sharp Cheddar' : 'Mild Cheddar'};
+  result = {xp, acc, perfect, unlocked, title: L.lesson.title, grade: acc === 100 ? 'Extra Mature' : acc >= 80 ? 'Sharp Cheddar' : 'Mild Cheddar'};
   L = null; view = 'done'; render();
 }
 
@@ -400,6 +515,16 @@ function viewHome(){
       <small>Cheese level: ${rank()} · ${doneCount} of ${LESSONS.length} lessons done</small>
     </section>
     <ol class="path">${nodes}</ol>
+    <section class="places">
+      <h2>Places</h2>
+      <p class="note">Earn XP to unlock real-world situations. You have ${S.xp} XP.</p>
+      <div class="pgrid">${PLACES.map(pl => {
+        const open = S.xp >= pl.xp, done = !!S.done[pl.id];
+        return `<button class="place ${open ? (done ? 'done' : 'open') : 'locked'}" data-act="start" data-v="${pl.id}" ${open ? '' : 'disabled'}>
+          <b>${esc(pl.title)}</b><span>${esc(pl.sub)}</span>
+          <i class="tag">${done ? 'Done · redo' : open ? 'Unlocked' : 'Unlocks at ' + pl.xp + ' XP'}</i></button>`;
+      }).join('')}</div>
+    </section>
     <section class="practice">
       <div><h3>Practice round</h3><p>Eight random questions from the lessons you have finished.</p></div>
       <button class="btn ghost" data-act="start" data-v="practice">Practice</button>
@@ -476,6 +601,7 @@ function viewDone(){
       <div class="tile"><b>${liveStreak()}</b><span>day streak</span></div>
     </div>
     <p class="note">Your grade: <b>${r.grade}</b>. Cheese level is now ${rank()}.</p>
+    ${r.unlocked.length ? `<p class="unlock"><b>New place unlocked:</b> ${esc(r.unlocked.join(', '))}</p>` : ''}
     <div class="row"><button class="btn" data-act="home">Back to the path</button><button class="btn ghost" data-act="start" data-v="practice">Practice round</button></div>
   </main>`;
 }
