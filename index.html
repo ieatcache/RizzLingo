@@ -54,7 +54,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .brand{display:flex;align-items:center;gap:10px}
 .brand .mascot{width:52px;height:52px}
 .brand h1{font-size:30px;letter-spacing:.5px}
-.stats{display:flex;gap:18px}
+.stats{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .hero{background:var(--ink);color:var(--bg);border-radius:24px;padding:20px 22px;margin:8px 0 6px;display:flex;flex-direction:column;gap:8px}
 .hero .eyebrow{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cheese)}
 .hero p{margin:0;font-family:var(--display);font-size:26px;line-height:1.15;text-wrap:balance}
@@ -115,6 +115,14 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 .price{margin:0;font-size:18px}
 .price b{font-family:var(--display);font-weight:400;font-size:30px;color:var(--pink);font-variant-numeric:tabular-nums}
 .price .note{margin-left:8px;font-size:14px}
+.acctbox{position:relative}
+.acctbox:empty{display:none}
+.chip{border:2px solid var(--ink);background:var(--card);border-radius:99px;padding:5px 12px;font-weight:800;font-size:14px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;min-width:170px;background:var(--card);border:2px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;overflow:hidden}
+.menu button{border:0;background:none;text-align:left;padding:11px 14px;font-weight:600;font-size:15px;border-top:2px solid var(--line)}
+.menu button:first-child{border-top:0}
+.menu button:hover{background:var(--bg)}
+.menu .danger{color:var(--bad)}
 @keyframes bob{50%{transform:translateY(-5px)}}
 
 /* lesson */
@@ -484,11 +492,15 @@ const actions = {
     else { u.wrong = {l: u.selL, r: j}; u.selL = null; }
     render();
   },
-  join: () => join(),
-  outAsk: () => { cloud.confirmOut = true; paintBoard(); },
-  outNo: () => { cloud.confirmOut = false; paintBoard(); },
-  outYes: () => signOutNow(),
-  delAsk: () => { R = {stage:'pitch', i:0, price:100, taps:0, msg:''}; view = 'ransom'; render(); },
+  auth: () => auth(),
+  mode: () => { cloud.mode = cloud.mode === 'in' ? 'join' : 'in'; cloud.msg = ''; cloud.note = ''; paintBoard(); },
+  goAuth: () => { cloud.mode = 'in'; cloud.msg = ''; paintBoard(); const b = document.getElementById('board'); if (b && b.scrollIntoView) b.scrollIntoView({behavior: 'smooth'}); const u = document.getElementById('uname'); if (u && u.focus) u.focus({preventScroll: true}); },
+  menu: () => { cloud.menu = !cloud.menu; paintBoard(); },
+  pwAsk: () => { cloud.menu = false; cloud.pwForm = true; cloud.msg = ''; cloud.note = ''; paintBoard(); const b = document.getElementById('board'); if (b && b.scrollIntoView) b.scrollIntoView({behavior: 'smooth'}); },
+  pwCancel: () => { cloud.pwForm = false; cloud.msg = ''; cloud.note = ''; paintBoard(); },
+  pwSave: () => savePw(),
+  outAsk: () => signOutNow(),
+  delAsk: () => { cloud.menu = false; R = {stage:'pitch', i:0, price:100, taps:0, msg:''}; view = 'ransom'; render(); },
   rStart: () => { R.stage = 'haggle'; render(); },
   rPick: v => { if (+v === HAGGLE[R.i].a) rWin(); else { R.msg = HAGGLE[R.i].no; render(); } },
   rType: () => { const el = document.getElementById('rphrase'); const ok = el && norm(el.value) === norm(HAGGLE[R.i].phrase); if (ok) rWin(); else { R.msg = HAGGLE[R.i].no; render(); } },
@@ -506,13 +518,15 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'uname') { cloud.draft = e.target.value; return; }
+  if (e.target.id === 'upass') { cloud.pdraft = e.target.value; return; }
   if (e.target.id === 'blank' && L && !L.fb) {
     L.ui.val = e.target.value;
     const c = document.getElementById('checkBtn'); if (c) c.disabled = !ready();
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.target && e.target.id === 'uname' && e.key === 'Enter') { e.preventDefault(); return join(); }
+  if (e.target && e.key === 'Enter' && (e.target.id === 'uname' || e.target.id === 'upass')) { e.preventDefault(); return auth(); }
+  if (e.target && e.key === 'Enter' && e.target.id === 'npass') { e.preventDefault(); return savePw(); }
   if (view !== 'lesson' || !L) return;
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -530,17 +544,32 @@ const SUPABASE_KEY = 'sb_publishable_gvF23wzNsOMg-Wf8b46zMw_gIreVAsn';
 const cloud = {on: !!(SUPABASE_URL && SUPABASE_KEY), sb: null, uid: null, name: '', rows: null, msg: '', busy: false, down: false};
 const NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
 
+function acctHTML(){
+  if (!cloud.on || cloud.down) return '';
+  if (!cloud.name) return `<button class="chip" data-act="goAuth">Sign in</button>`;
+  return `<button class="chip" data-act="menu" aria-expanded="${cloud.menu ? 'true' : 'false'}">${esc(cloud.name)} <span aria-hidden="true">▾</span></button>` +
+    (cloud.menu ? `<div class="menu"><button data-act="pwAsk">Set password</button><button data-act="outAsk">Sign out</button><button class="danger" data-act="delAsk">Delete account</button></div>` : '');
+}
 function boardHTML(){
   if (!cloud.on) return '';
+  const note = cloud.note ? `<p class="unlock">${esc(cloud.note)}</p>` : '';
+  const err = cloud.msg ? `<p class="err" role="alert">${esc(cloud.msg)}</p>` : '';
   let top;
   if (cloud.down) top = `<p class="note">The leaderboard can't be reached right now. Your progress is still saved on this device.</p>`;
-  else if (cloud.name) top = `<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>` + (cloud.confirmOut
-    ? `<p class="hintline">Sign out? A username-only account cannot be signed back into. The name stays on the board and nobody can use it again.</p><div class="acct"><button class="link" data-act="outYes">Yes, sign out</button><button class="link" data-act="outNo">Cancel</button></div>`
-    : `<div class="acct"><button class="link" data-act="outAsk">Sign out</button><button class="link" data-act="delAsk">Delete account</button></div>`);
-  else top = `${cloud.note ? `<p class="unlock">${esc(cloud.note)}</p>` : ''}<p class="note">Pick a username to put your XP on the board. No email or password.</p>
-    <div class="join"><input id="uname" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="username" aria-label="Username" value="${esc(cloud.draft || '')}">
-    <button class="btn" data-act="join" ${cloud.busy ? 'disabled' : ''}>${cloud.busy ? 'Joining…' : 'Join'}</button></div>
-    ${cloud.msg ? `<p class="err" role="alert">${esc(cloud.msg)}</p>` : `<p class="hintline">3 to 16 letters, numbers or underscores.</p>`}`;
+  else if (cloud.name && cloud.pwForm) top = `${note}<p class="note">Set a password for <b>${esc(cloud.name)}</b> so you can sign back in, here or on another device.</p>
+    <div class="join"><input id="npass" type="password" maxlength="72" autocomplete="new-password" placeholder="new password" aria-label="New password">
+    <button class="btn" data-act="pwSave" ${cloud.busy ? 'disabled' : ''}>Save</button><button class="btn ghost" data-act="pwCancel">Cancel</button></div>${err || `<p class="hintline">At least 4 characters.</p>`}`;
+  else if (cloud.name) top = `${note}<p class="note">You are playing as <b>${esc(cloud.name)}</b> with ${S.xp} XP.</p>
+    <div class="acct"><button class="link" data-act="pwAsk">Set password</button><button class="link" data-act="outAsk">Sign out</button><button class="link" data-act="delAsk">Delete account</button></div>${err}`;
+  else {
+    const inMode = cloud.mode === 'in';
+    top = `${note}<p class="note">${inMode ? 'Sign in with your username and password.' : 'Pick a username and password to put your XP on the board. No email needed.'}</p>
+    <div class="join"><input id="uname" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" aria-label="Username" value="${esc(cloud.draft || '')}">
+    <input id="upass" type="password" maxlength="72" autocomplete="${inMode ? 'current-password' : 'new-password'}" placeholder="password" aria-label="Password" value="${esc(cloud.pdraft || '')}">
+    <button class="btn" data-act="auth" ${cloud.busy ? 'disabled' : ''}>${cloud.busy ? 'One moment…' : inMode ? 'Sign in' : 'Join'}</button></div>
+    ${err || (inMode ? '' : `<p class="hintline">Username: 3 to 16 letters, numbers or underscores. Password: at least 4 characters.</p>`)}
+    <div class="acct"><button class="link" data-act="mode">${inMode ? 'New here? Create an account' : 'Already have an account? Sign in'}</button></div>`;
+  }
   let list = '';
   if (cloud.rows && cloud.rows.length) {
     list = `<ol class="rows">` + cloud.rows.map((r, i) => `<li class="${r.username === cloud.name ? 'me' : ''}"><span class="pos">${i + 1}</span><span class="who">${esc(r.username)}</span><span class="pts">${r.xp} XP</span></li>`).join('') + `</ol>`;
@@ -548,13 +577,20 @@ function boardHTML(){
   else if (!cloud.down) list = `<p class="note">Loading the board…</p>`;
   return `<h2>Leaderboard</h2>${top}${list}`;
 }
-function paintBoard(){ const el = document.getElementById('board'); if (el && view === 'home') el.innerHTML = boardHTML(); }
+function paintBoard(){
+  if (view !== 'home') return;
+  const el = document.getElementById('board'); if (el) el.innerHTML = boardHTML();
+  const a = document.getElementById('acct'); if (a) a.innerHTML = acctHTML();
+}
 function explain(e){
   const m = String((e && (e.message || e.msg || e.error_description)) || e || '');
+  if (/wrong username/i.test(m)) return 'Wrong username or password.';
+  if (/bad password/i.test(m)) return 'Passwords need 4 to 72 characters.';
+  if (/could not find the function|PGRST202/i.test(m + ' ' + ((e && e.code) || ''))) return 'The database is missing the sign-in functions. Run the new SQL in Supabase.';
   if (/anonymous/i.test(m)) return 'Could not join: anonymous sign-ins are switched off in the database settings.';
   if (/captcha/i.test(m)) return 'Could not join: the database is asking for a CAPTCHA.';
   if (/rate limit|too many/i.test(m)) return 'Too many sign-ups from this network. Try again in an hour.';
-  return 'Could not join right now.' + (m ? ' (' + m.slice(0, 140) + ')' : '');
+  return 'That did not work.' + (m ? ' (' + m.slice(0, 140) + ')' : '');
 }
 function loadScript(src){ return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
 async function loadBoard(){
@@ -588,29 +624,51 @@ async function pushXp(){
   if (!cloud.sb || !cloud.uid || !cloud.name) return;
   try { await cloud.sb.from('players').update({xp: S.xp, updated_at: new Date().toISOString()}).eq('id', cloud.uid); } catch (e) {}
 }
-async function join(){
+async function ensureSession(){
+  if (cloud.uid) return;
+  const {data, error} = await cloud.sb.auth.signInAnonymously();
+  if (error) throw error;
+  cloud.uid = data.user.id;
+}
+async function auth(){
   if (!cloud.sb || cloud.busy) return;
-  const el = document.getElementById('uname');
-  const name = (el ? el.value : cloud.draft || '').trim();
-  cloud.draft = name;
-  if (!NAME_RE.test(name)) { cloud.msg = 'Use 3 to 16 letters, numbers or underscores.'; return paintBoard(); }
+  const u = document.getElementById('uname'), p = document.getElementById('upass');
+  const name = (u && u.value != null ? u.value : cloud.draft || '').trim();
+  const pass = p && p.value != null ? p.value : cloud.pdraft || '';
+  cloud.draft = name; cloud.pdraft = pass; cloud.note = '';
+  const inMode = cloud.mode === 'in';
+  if (!NAME_RE.test(name)) { cloud.msg = 'Usernames are 3 to 16 letters, numbers or underscores.'; return paintBoard(); }
+  if (pass.length < 4) { cloud.msg = 'Passwords need at least 4 characters.'; return paintBoard(); }
   cloud.busy = true; cloud.msg = ''; paintBoard();
   try {
-    if (!cloud.uid) {
-      const {data, error} = await cloud.sb.auth.signInAnonymously();
+    await ensureSession();
+    if (inMode) {
+      const {data, error} = await cloud.sb.rpc('sign_in', {p_username: name, p_password: pass});
       if (error) throw error;
-      cloud.uid = data.user.id;
+      cloud.name = data.username;
+      if (data.xp > S.xp) { S.xp = data.xp; save(); }
+    } else {
+      const {error} = await cloud.sb.rpc('join_board', {p_username: name, p_password: pass, p_xp: S.xp});
+      if (error) throw error;
+      cloud.name = name;
     }
-    const {error} = await cloud.sb.from('players').insert({id: cloud.uid, username: name, xp: S.xp});
-    if (error) {
-      cloud.msg = error.code === '23505' ? 'That username is taken. Try another.' : explain(error);
-    } else { cloud.name = name; cloud.draft = ''; cloud.note = ''; }
-  } catch (e) { cloud.msg = explain(e); }
+    cloud.draft = ''; cloud.pdraft = '';
+  } catch (e) { cloud.msg = e && e.code === '23505' ? 'That username is taken. Try another.' : explain(e); }
   cloud.busy = false;
-  paintBoard();
-  if (cloud.name) loadBoard();
+  if (cloud.name) { render(); pushXp().then(loadBoard); } else paintBoard();
 }
-
+async function savePw(){
+  if (!cloud.sb || cloud.busy) return;
+  const el = document.getElementById('npass'); const pass = el ? el.value || '' : '';
+  if (pass.length < 4) { cloud.msg = 'Passwords need at least 4 characters.'; return paintBoard(); }
+  cloud.busy = true; cloud.msg = ''; paintBoard();
+  try {
+    const {error} = await cloud.sb.rpc('set_password', {p_password: pass});
+    if (error) throw error;
+    cloud.pwForm = false; cloud.note = 'Password saved. You can now sign out and back in.';
+  } catch (e) { cloud.msg = explain(e); }
+  cloud.busy = false; paintBoard();
+}
 /* ---- Sign out, delete account, and Dave's (fake) exit fee ---- */
 const HAGGLE = [
   {to: 75, t:'mc', say:'Start by saying something nice about Dave.', opts:['Those sunglasses are doing a lot of work.','You have the confidence of a much taller camel.','You smell like a zoo.'], a:1, no:'Dave is hurt. The price stays.'},
@@ -664,8 +722,15 @@ async function deleteAccount(){
 }
 async function signOutNow(){
   if (!cloud.sb) return;
+  cloud.menu = false; cloud.msg = '';
+  try {
+    const {data, error} = await cloud.sb.rpc('has_password');
+    if (error) throw error;
+    if (!data) { cloud.pwForm = true; cloud.note = 'Set a password first, or you will not be able to sign back in to this account.'; return paintBoard(); }
+  } catch (e) { cloud.msg = explain(e); return paintBoard(); }
   try { await cloud.sb.auth.signOut(); } catch (e) {}
-  cloud.uid = null; cloud.name = ''; cloud.confirmOut = false; cloud.note = 'You are signed out.'; paintBoard();
+  cloud.uid = null; cloud.name = ''; cloud.mode = 'in'; cloud.note = 'You are signed out. Sign back in any time with your username and password.';
+  render();
 }
 
 function viewHome(){
@@ -686,6 +751,7 @@ function viewHome(){
       <div class="stats">
         <div class="stat">${liveStreak()} <small>day streak</small></div>
         <div class="stat">${S.xp} <small>XP</small></div>
+        <div class="acctbox" id="acct">${acctHTML()}</div>
       </div>
     </header>
     <section class="hero">
@@ -800,7 +866,7 @@ function viewTerms(){
       <li><b>No refunds.</b>The site is free. You will still not be getting your money back.</li>
       <li><b>Results are not guaranteed.</b>If a line bombs, that is between you, her and the camel.</li>
     </ol>
-    <p class="fine">The actual fine print: this page is a joke. RizzLingo claims no real rights to anything of yours. Your progress is saved in your own browser. If you join the leaderboard, we store the username you pick and your XP so they can appear on the board, and nothing else: no email, no password. You can delete your account from the Leaderboard section at any time, for free, whatever Dave tells you.</p>
+    <p class="fine">The actual fine print: this page is a joke. RizzLingo claims no real rights to anything of yours. Your progress is saved in your own browser. If you join the leaderboard, we store the username you pick, your XP and a scrambled copy of your password that nobody can read, and nothing else. No email. You can delete your account from the Leaderboard section at any time, for free, whatever Dave tells you.</p>
     <div><button class="btn" data-act="home">Back to the path</button></div>
   </main>`;
 }
